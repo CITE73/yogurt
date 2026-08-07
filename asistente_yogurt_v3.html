@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Asistente de Planta Digital · Yogurt · CITEagroindustrial</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --crema:      #FFFDF8;
+  --crema2:     #F7F1E3;
+  --crema-card: #FFFFFF;
+  --violeta:    #6A3D9A;
+  --violeta-d:  #4A2A6E;
+  --violeta-lt: #9B6FC7;
+  --violeta-bg: #F3EBFA;
+  --verde:      #1B7A3D;
+  --ambar:      #C77700;
+  --rojo:       #B71C1C;
+  --txt:        #2C2416;
+  --txt-s:      #8A7D68;
+  --borde:      #E8DFC8;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'DM Sans',sans-serif; background:var(--crema2); color:var(--txt); padding-bottom:40px;}
+h1,h2,h3{font-family:'DM Serif Display',serif;}
+
+header{background:var(--violeta-d); color:#fff; padding:14px 18px; position:sticky; top:0; z-index:50; box-shadow:0 2px 10px rgba(74,42,110,.25);}
+.header-row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+header h1{font-size:1.05rem; font-weight:400; color:#FBE8FF;}
+header .sub{font-size:.72rem; color:#D9C2EE; margin-top:1px;}
+.header-actions{display:flex; flex-direction:column; align-items:flex-end; gap:6px;}
+.badge{display:inline-flex; align-items:center; gap:5px; font-size:.68rem; padding:4px 10px; border-radius:20px; font-weight:600; white-space:nowrap;}
+.badge.ok{background:#1b7a3d33; color:#a8f0bf;}
+.badge.pend{background:#c7770033; color:#ffd699;}
+.badge.err{background:#b71c1c33; color:#ffb3b3;}
+.link-dashboard{background:rgba(255,255,255,.14); color:#fff; text-decoration:none; font-size:.72rem; font-weight:600; padding:6px 12px; border-radius:8px; display:inline-flex; align-items:center; gap:5px; border:1px solid rgba(255,255,255,.25);}
+.link-dashboard:active{background:rgba(255,255,255,.24);}
+
+.titulo-app{background:var(--violeta); color:#fff; text-align:center; padding:10px; font-family:'DM Serif Display'; font-size:1.15rem; letter-spacing:.3px;}
+
+/* Selector de producto inicial */
+#selectorProducto{padding:24px 16px; max-width:520px; margin:0 auto;}
+.card-producto{background:var(--crema-card); border:2px solid var(--borde); border-radius:14px; padding:20px; margin-bottom:14px; cursor:pointer; transition:.15s; display:flex; align-items:center; gap:14px;}
+.card-producto:active{transform:scale(.98);}
+.card-producto.griego{border-left:6px solid var(--violeta);}
+.card-producto.frutado{border-left:6px solid #8B3A9E;}
+.card-producto .icono{font-size:2.2rem;}
+.card-producto h2{font-size:1.15rem; color:var(--violeta-d); margin-bottom:3px;}
+.card-producto p{font-size:.82rem; color:var(--txt-s);}
+
+/* Barra de lote activo */
+.lote-bar{background:var(--crema-card); border-bottom:2px solid var(--borde); padding:10px 16px; display:flex; justify-content:space-between; align-items:center;}
+.lote-bar .id{font-family:'DM Serif Display'; color:var(--violeta-d); font-size:1.05rem;}
+.lote-bar .fecha{font-size:.72rem; color:var(--txt-s);}
+
+/* Inputs globales */
+.panel-inputs{background:var(--crema-card); margin:14px 16px; border-radius:14px; padding:18px; border:1px solid var(--borde); max-width:640px; margin-left:auto; margin-right:auto;}
+.panel-inputs h3{font-size:.78rem; text-transform:uppercase; letter-spacing:.5px; color:var(--violeta); margin-bottom:14px; font-weight:700;}
+.campo{margin-bottom:12px;}
+.campo label{display:block; font-size:.78rem; color:var(--txt-s); margin-bottom:4px; font-weight:500;}
+.tag-auto{display:inline-block; background:var(--violeta-bg); color:var(--violeta-d); font-size:.62rem; font-weight:700; padding:1px 7px; border-radius:8px; margin-left:4px; vertical-align:middle;}
+.tag-auto.manual{background:#FFF4E0; color:var(--ambar);}
+.campo input, .campo select{width:100%; padding:11px 12px; border:1.5px solid var(--borde); border-radius:9px; font-size:.95rem; font-family:'DM Sans'; background:var(--crema); color:var(--txt);}
+.campo input:focus, .campo select:focus{outline:none; border-color:var(--violeta-lt); background:#fff;}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+.chip-presentacion{display:flex; gap:8px;}
+.chip-presentacion button{flex:1; padding:11px 4px; border:1.5px solid var(--borde); background:var(--crema); border-radius:9px; font-family:'DM Sans'; font-weight:700; font-size:.85rem; color:var(--txt-s); cursor:pointer;}
+.chip-presentacion button.active{background:var(--violeta); color:#fff; border-color:var(--violeta);}
+
+/* Tabs tipo pill (como referencia café) */
+.tabs{display:flex; gap:8px; padding:0 16px; margin:16px auto 0; max-width:640px; overflow-x:auto;}
+.tab-btn{flex:1; min-width:110px; padding:12px 8px; background:var(--crema-card); border:1.5px solid var(--borde); color:var(--txt-s); font-family:'DM Sans'; font-size:.78rem; font-weight:700; cursor:pointer; border-radius:10px 10px 0 0; white-space:nowrap; display:flex; align-items:center; justify-content:center; gap:5px;}
+.tab-btn.active{color:#fff; background:var(--violeta); border-color:var(--violeta);}
+
+.tab-content{display:none; padding:16px; max-width:640px; margin:0 auto; background:var(--crema-card); border:1.5px solid var(--borde); border-top:none; border-radius:0 0 14px 14px;}
+.tab-content.active{display:block;}
+
+.section{margin-bottom:18px;}
+.section h3{font-size:.95rem; color:var(--violeta-d); margin-bottom:12px; display:flex; align-items:center; gap:7px;}
+.section h3 .num{background:var(--violeta); color:#fff; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:.72rem; font-family:'DM Sans';}
+
+.kpi-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;}
+.kpi{background:var(--violeta-bg); border:1px solid var(--borde); border-radius:12px; padding:13px;}
+.kpi .lbl{font-size:.66rem; color:var(--txt-s); text-transform:uppercase; font-weight:700; letter-spacing:.3px;}
+.kpi .val{font-size:1.35rem; font-family:'DM Serif Display'; color:var(--violeta-d); margin-top:3px;}
+.kpi.big{grid-column:1/-1; background:var(--violeta-d); color:#fff;}
+.kpi.big .lbl{color:#D9C2EE;}
+.kpi.big .val{color:#fff; font-size:1.8rem;}
+.kpi.alerta{background:#FDEDED; border-color:#f0c9c9;}
+.kpi.alerta .val{color:var(--rojo);}
+
+.aviso-capacidad{background:#FFF4E0; border:1.5px solid #F0D48A; border-radius:10px; padding:12px 14px; font-size:.82rem; margin-bottom:16px; display:flex; gap:10px; align-items:flex-start;}
+.aviso-capacidad .icon{font-size:1.2rem;}
+.aviso-capacidad b{color:var(--ambar);}
+
+.flujo-etapa{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed var(--borde); font-size:.82rem;}
+.flujo-etapa:last-child{border-bottom:none;}
+.flujo-etapa .nombre{color:var(--txt); font-weight:500;}
+.flujo-etapa .valor{color:var(--violeta-d); font-weight:700; text-align:right;}
+
+.tabla-costos{width:100%; border-collapse:collapse; font-size:.82rem;}
+.tabla-costos th{text-align:left; padding:8px 4px; color:var(--txt-s); font-weight:700; border-bottom:2px solid var(--borde); font-size:.68rem; text-transform:uppercase; letter-spacing:.3px;}
+.tabla-costos td{padding:8px 4px; border-bottom:1px solid var(--crema2);}
+.tabla-costos td:last-child, .tabla-costos th:last-child{text-align:right; font-weight:600;}
+.tabla-costos .badge-tipo{font-size:.62rem; padding:1px 7px; border-radius:10px; font-weight:700;}
+.badge-tipo.fijo{background:#FDEDED; color:var(--rojo);}
+.badge-tipo.variable{background:#E8F5EC; color:var(--verde);}
+.tabla-costos tr.total td{font-weight:700; color:var(--violeta-d); border-top:2px solid var(--violeta-lt); border-bottom:none; padding-top:11px; font-size:.92rem;}
+.tabla-costos tr.subtotal td{font-weight:700; background:var(--violeta-bg);}
+
+.tabla-escala{width:100%; border-collapse:collapse; font-size:.78rem; margin-top:10px;}
+.tabla-escala th{background:var(--violeta); color:#fff; padding:7px 4px; font-size:.66rem;}
+.tabla-escala td{padding:7px 4px; text-align:center; border-bottom:1px solid var(--crema2);}
+.tabla-escala tr.actual{background:var(--violeta-bg); font-weight:700; color:var(--violeta-d);}
+
+.resumen-lote{background:var(--violeta-bg); border:2px solid var(--violeta-lt); border-radius:12px; padding:16px; margin-bottom:14px;}
+.resumen-lote .lote-id{font-family:'DM Serif Display'; font-size:1.3rem; color:var(--violeta-d); margin-bottom:10px;}
+.resumen-row{display:flex; justify-content:space-between; padding:6px 0; font-size:.85rem; border-bottom:1px dashed #ddd0ef;}
+.resumen-row .k{color:var(--txt-s);}
+.resumen-row .v{font-weight:700; color:var(--txt);}
+
+.btn{display:block; width:100%; padding:14px; border:none; border-radius:11px; font-family:'DM Sans'; font-weight:700; font-size:.92rem; cursor:pointer; margin-top:10px;}
+.btn-primary{background:var(--violeta); color:#fff;}
+.btn-primary:active{background:var(--violeta-d);}
+.btn-outline{background:transparent; border:1.5px solid var(--violeta); color:var(--violeta);}
+
+.historial-item{background:var(--crema); border:1px solid var(--borde); border-radius:10px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
+.historial-item .info{font-size:.8rem;}
+.historial-item .info b{display:block; font-size:.9rem; color:var(--violeta-d);}
+.historial-item .del{background:none; border:none; font-size:1.1rem; cursor:pointer; opacity:.5; margin-left:8px;}
+
+.nota{font-size:.72rem; color:var(--txt-s); background:var(--crema2); padding:10px 12px; border-radius:9px; margin-top:8px; line-height:1.5;}
+
+#toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--violeta-d); color:#fff; padding:11px 22px; border-radius:22px; font-size:.82rem; opacity:0; transition:.3s; pointer-events:none; z-index:100; box-shadow:0 4px 14px rgba(0,0,0,.2);}
+#toast.show{opacity:1;}
+
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <h1 id="headerTitulo">CITEagroindustrial Huallaga</h1>
+      <div class="sub">Línea Yogurt · Tingo María</div>
+    </div>
+    <div class="header-actions">
+      <div class="badge pend" id="badgeConexion">🟡 Verificando…</div>
+      <a class="link-dashboard" href="dashboard_yogurt.html" target="_blank">📊 Dashboard</a>
+    </div>
+  </div>
+</header>
+
+<div class="titulo-app" id="tituloApp">ASISTENTE DE PLANTA DIGITAL · YOGURT</div>
+
+<!-- SELECTOR INICIAL DE PRODUCTO -->
+<div id="selectorProducto">
+  <h2 style="color:var(--violeta-d); font-size:1.1rem; margin:14px 0 4px;">Selecciona el producto</h2>
+  <p style="font-size:.82rem; color:var(--txt-s); margin-bottom:18px;">Cada producto tiene su propio flujo de proceso y estructura de costos.</p>
+
+  <div class="card-producto griego" onclick="seleccionarProducto('griego')">
+    <div class="icono">🥣</div>
+    <div>
+      <h2>Yogurt Griego Probiótico</h2>
+      <p>Leche fresca + cultivo + leche en polvo. 10 etapas de proceso.</p>
+    </div>
+  </div>
+
+  <div class="card-producto frutado" onclick="seleccionarProducto('frutado')">
+    <div class="icono">🫐</div>
+    <div>
+      <h2>Yogurt Frutado Probiótico</h2>
+      <p>Leche fresca + cultivo + arándano + azúcar. 12 etapas de proceso.</p>
+    </div>
+  </div>
+
+  <div class="nota">💡 Capacidad máxima de planta: 80 litros de leche al mes. El costo fijo del mes (marketing, contador, EPP, depreciación) se aplica completo sin importar cuánto proceses — por eso producir menos sale más caro por unidad.</div>
+</div>
+
+<!-- APP PRINCIPAL (oculta hasta elegir producto) -->
+<div id="appPrincipal" class="hidden">
+
+<div class="lote-bar">
+  <span class="id" id="loteIdBar">Lote_—</span>
+  <span class="fecha" id="fechaBar">—</span>
+</div>
+
+<div class="panel-inputs">
+  <h3>Inputs globales — compartidos por las 3 pestañas</h3>
+
+  <div class="row2">
+    <div class="campo">
+      <label>Leche fresca — Cantidad (litros)</label>
+      <input type="number" id="litrosLeche" value="20" step="1" min="0" oninput="onCambioLitros()">
+    </div>
+    <div class="campo">
+      <label>Leche fresca — Precio (S/·L)</label>
+      <input type="number" id="precioLeche" value="3.50" step="0.01" oninput="recalcularTodo()">
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="campo">
+      <label>Cultivo/Probiótico — Cantidad (g) <span class="tag-auto" id="tagCultivo">auto: 20g/L</span></label>
+      <input type="number" id="cantCultivo" value="20" step="0.5" oninput="marcarManual('cantCultivo','tagCultivo')">
+    </div>
+    <div class="campo">
+      <label>Cultivo/Probiótico — Precio (S/·g)</label>
+      <input type="number" id="precioCultivo" value="0.40" step="0.01" oninput="recalcularTodo()">
+    </div>
+  </div>
+
+  <div id="camposGriego" class="row2">
+    <div class="campo">
+      <label>Leche en polvo — Cantidad (kg) <span class="tag-auto" id="tagLechePolvo">auto: 50g/L</span></label>
+      <input type="number" id="cantLechePolvo" value="1" step="0.05" oninput="marcarManual('cantLechePolvo','tagLechePolvo')">
+    </div>
+    <div class="campo">
+      <label>Leche en polvo — Precio (S/·kg)</label>
+      <input type="number" id="precioLechePolvo" value="1.40" step="0.01" oninput="recalcularTodo()">
+    </div>
+  </div>
+
+  <div id="camposFrutado" class="row2">
+    <div class="campo">
+      <label>Arándano (mermelada) — Cant. (kg) <span class="tag-auto" id="tagArandano">auto: 100g/L</span></label>
+      <input type="number" id="cantArandano" value="2" step="0.05" oninput="marcarManual('cantArandano','tagArandano')">
+    </div>
+    <div class="campo">
+      <label>Arándano — Precio (S/·kg)</label>
+      <input type="number" id="precioArandano" value="28" step="0.01" oninput="recalcularTodo()">
+    </div>
+    <div class="campo">
+      <label>Azúcar — Cantidad (kg) <span class="tag-auto" id="tagAzucar">auto: 50g/L</span></label>
+      <input type="number" id="cantAzucar" value="1" step="0.05" oninput="marcarManual('cantAzucar','tagAzucar')">
+    </div>
+    <div class="campo">
+      <label>Azúcar — Precio (S/·kg)</label>
+      <input type="number" id="precioAzucar" value="0.14" step="0.01" oninput="recalcularTodo()">
+    </div>
+  </div>
+
+  <div class="nota" style="margin-bottom:4px;">🔄 Las cantidades marcadas <b>auto</b> se recalculan solas según los litros de leche. Puedes escribir un valor distinto en cualquier momento para ajustarlo manualmente.</div>
+
+  <div class="campo" style="margin-top:4px;">
+    <label>Presentación del producto final</label>
+    <div class="chip-presentacion">
+      <button data-pres="250" onclick="elegirPresentacion(250)">250 ml</button>
+      <button data-pres="500" class="active" onclick="elegirPresentacion(500)">500 ml</button>
+      <button data-pres="1000" onclick="elegirPresentacion(1000)">1000 ml</button>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="produccion" onclick="cambiarTab('produccion')">📊 Producción</button>
+  <button class="tab-btn" data-tab="costos" onclick="cambiarTab('costos')">💰 Costos ABC</button>
+  <button class="tab-btn" data-tab="rentabilidad" onclick="cambiarTab('rentabilidad')">📈 Rentabilidad</button>
+</div>
+
+<!-- TAB 1: PRODUCCIÓN -->
+<div class="tab-content active" id="tab-produccion">
+
+  <div class="aviso-capacidad" id="avisoCapacidad">
+    <span class="icon">⚠️</span>
+    <div><b>Produciendo por debajo de la capacidad máxima.</b> A menor volumen, los costos fijos (marketing, contador, EPP, depreciación) se reparten entre menos unidades y el costo por unidad sube.</div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="lbl">Litros procesados</div><div class="val" id="kpiLitrosProc">—</div></div>
+    <div class="kpi"><div class="lbl">Unidades a producir</div><div class="val" id="kpiUnidades">—</div></div>
+    <div class="kpi"><div class="lbl">% de capacidad usada</div><div class="val" id="kpiCapacidad">—</div></div>
+    <div class="kpi"><div class="lbl">Días de producción</div><div class="val" id="kpiDias">—</div></div>
+  </div>
+
+  <div class="section">
+    <h3><span class="num">1</span>Flujo de proceso</h3>
+    <div id="flujoProceso"></div>
+  </div>
+</div>
+
+<!-- TAB 2: COSTOS ABC -->
+<div class="tab-content" id="tab-costos">
+
+  <div class="section">
+    <h3><span class="num">1</span>Materia prima e insumos <span class="badge-tipo variable">VARIABLE</span></h3>
+    <table class="tabla-costos" id="tablaMP"></table>
+  </div>
+
+  <div class="section">
+    <h3><span class="num">2</span>Empaque <span class="badge-tipo variable">VARIABLE</span></h3>
+    <table class="tabla-costos" id="tablaEmpaque"></table>
+  </div>
+
+  <div class="section">
+    <h3><span class="num">3</span>Servicios: gas y electricidad <span class="badge-tipo variable">VARIABLE</span></h3>
+    <table class="tabla-costos" id="tablaServicios"></table>
+  </div>
+
+  <div class="section">
+    <h3><span class="num">4</span>Mano de obra directa <span class="badge-tipo variable">VARIABLE</span></h3>
+    <table class="tabla-costos" id="tablaMOD"></table>
+  </div>
+
+  <div class="section">
+    <h3><span class="num">5</span>Gastos fijos del mes <span class="badge-tipo fijo">FIJO — completo</span></h3>
+    <table class="tabla-costos" id="tablaGastos"></table>
+    <div class="nota">Estos montos son fijos mensuales de la planta. No se reducen aunque proceses menos litros — por eso conviene acercarse a la capacidad máxima de 80 L/mes.</div>
+  </div>
+
+  <div class="section">
+    <h3><span class="num">6</span>Resumen de costos</h3>
+    <table class="tabla-costos" id="tablaResumenCostos"></table>
+  </div>
+</div>
+
+<!-- TAB 3: RENTABILIDAD -->
+<div class="tab-content" id="tab-rentabilidad">
+
+  <div class="kpi-grid">
+    <div class="kpi" id="kpiCostoUndBox"><div class="lbl">Costo unitario</div><div class="val" id="kpiCostoUnd">—</div></div>
+    <div class="kpi"><div class="lbl">Margen de utilidad</div><div class="val" id="kpiMargen">—</div></div>
+    <div class="kpi big"><div class="lbl">Precio de venta al x mayor</div><div class="val" id="kpiPrecioVenta">—</div></div>
+  </div>
+
+  <div class="section">
+    <h3><span class="num">1</span>Parámetros de precio</h3>
+    <div class="row2">
+      <div class="campo">
+        <label>Utilidad deseada (%)</label>
+        <input type="number" id="margenUtilidad" value="35" step="1" oninput="recalcularTodo()">
+      </div>
+      <div class="campo">
+        <label>Impuesto a la renta (%)</label>
+        <input type="number" id="impuestoRenta" value="1.5" step="0.1" oninput="recalcularTodo()">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3><span class="num">2</span>Desglose del precio</h3>
+    <table class="tabla-costos" id="tablaDesglosePrecio"></table>
+  </div>
+
+  <div class="section">
+    <h3><span class="num">3</span>Comparativo: ¿qué pasa si produzco menos o más?</h3>
+    <table class="tabla-escala" id="tablaEscala"></table>
+    <div class="nota">Los costos fijos (S/ del mes) son siempre los mismos. Al procesar más litros, esos S/ fijos se dividen entre más unidades y el costo por unidad baja. Al procesar menos, sube.</div>
+  </div>
+</div>
+
+<!-- SECCIÓN GUARDAR (fuera de tabs, siempre visible al fondo) -->
+<div style="max-width:640px; margin:16px auto 0; padding:0 16px;">
+  <div class="resumen-lote">
+    <div class="lote-id" id="loteIdPreview">Lote_—</div>
+    <div class="resumen-row"><span class="k">Producto</span><span class="v" id="resProducto">—</span></div>
+    <div class="resumen-row"><span class="k">Presentación</span><span class="v" id="resPresentacion">—</span></div>
+    <div class="resumen-row"><span class="k">Unidades producidas</span><span class="v" id="resUnidades">—</span></div>
+    <div class="resumen-row"><span class="k">Costo por unidad</span><span class="v" id="resCostoUnd">—</span></div>
+    <div class="resumen-row"><span class="k">Precio de venta</span><span class="v" id="resPrecioVenta">—</span></div>
+    <div class="resumen-row"><span class="k">Capital de trabajo</span><span class="v" id="resCapital">—</span></div>
+    <div class="resumen-row"><span class="k">Horas máquina</span><span class="v" id="resHorasMaq">—</span></div>
+    <div class="resumen-row"><span class="k">Horas hombre</span><span class="v" id="resHorasHom">—</span></div>
+  </div>
+
+  <button class="btn btn-primary" onclick="guardarLote()">💾 Guardar lote</button>
+  <button class="btn btn-outline" onclick="cambiarProducto()">🔁 Cambiar producto</button>
+
+  <div style="margin-top:22px;">
+    <h3 style="font-size:.95rem; color:var(--violeta-d); margin-bottom:10px;">📂 Historial de lotes</h3>
+    <div id="historialLista"></div>
+  </div>
+</div>
+
+</div><!-- fin appPrincipal -->
+
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   CONFIGURACIÓN — URL Apps Script (completar tras desplegar)
+   ══════════════════════════════════════════════════════════ */
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxL7ouy-yQtVCZ-cK0Sq19ZyCvGwZwuqk2HxXOvLI-e-ovuqLTAA55HV4b2Ro7v4RAz/exec'; // reemplazar con URL /exec terminada en /exec
+
+/* ══════════════════════════════════════════════════════════
+   CONSTANTES DE PRODUCCIÓN — extraídas del Excel de costos
+   Capacidad máxima de planta = 80 litros de leche / mes
+   Costos FIJOS = monto completo del mes/lote, NO se prorratean
+   Costos VARIABLES = escalan proporcionalmente a litros procesados
+
+   CADENA DE FRÍO: la empresaria vende 20 L en 6 días, por eso procesa
+   20 L/semana (~7 días de refrigerado). A más litros, más días necesita
+   para vender todo, así que refrigerado y congelador escalan igual:
+   dias_frio = 7 × (litros / 20)  →  80 L = 28 días
+   ══════════════════════════════════════════════════════════ */
+const CAPACIDAD_MAXIMA_LITROS = 80;
+const LITROS_REFERENCIA_FRIO = 20;
+const DIAS_FRIO_REFERENCIA = 7;
+
+const CONST = {
+  griego: {
+    nombre: 'Yogurt Griego Probiótico',
+    nombreCorto: 'yogurt_griego',
+    unidadesCapacidadMax: 171,        // potes 500ml a capacidad máxima (80L) según Excel
+    mermaInoculacion: 0.02,
+    empaque: {
+      250: {envase:0.22, etiqueta:0.30, bolsa:0.035},
+      500: {envase:0.34, etiqueta:0.30, bolsa:0.035},
+      1000:{envase:0.55, etiqueta:0.30, bolsa:0.035}
+    },
+    // Autocálculo de insumos por litro de leche (editable manualmente en la app)
+    gLechePolvoPorLitro: 50,   // 50 g leche en polvo / L
+    gCultivoPorLitro: 1,      // 20 g probiótico / L
+    // Gas — VARIABLE, proporcional a litros (no cambia con días de frío)
+    gasSolesPorLitro: 32.915252/80,
+    // Electricidad de EQUIPOS DE FRÍO — depende de horas reales de congelador+refrigerador,
+    // que a su vez dependen de los días de cadena de frío (ver DIAS_FRIO_REFERENCIA)
+    congeladorKw: 0.365,
+    refrigeradorKw: 0.24,
+    tarifaElectricidad: 0.79,
+    horasCongeladorPorDia: 4,   // el congelador trabaja continuo mientras dura el enfriado inicial
+    horasRefrigeradorPorDia: 24, // el refrigerador trabaja continuo durante toda la cadena de frío
+    // Costos FIJOS del mes — SIEMPRE completos, no se dividen entre litros
+    fijoAguaPlanta: 84,
+    fijoDepreciacionMantenimiento: 3,
+    fijoMarketing: 200,
+    fijoContador: 50,
+    fijoEppMes: 2.9*5, // EPP x día × 5 días de trabajo del mes = 14.5
+    diasProduccionMax: 5,
+    sueldoOperarioMes: 1500,
+    diasTrabajoMes: 22,
+    horasDiaTrabajo: 8,
+    tarifaMODhora: 8.522727,
+    utilidadDefault: 0.40,
+    impuestoDefault: 0.015,
+    // Horas hombre de PROCESO (sin contar refrigerado) a capacidad máxima (80L) — escalan con litros
+    horasHombreProcesoCapMax: 0.333333+0.333333+2.666667+0.2+2.1+0.21+0.029833+21.42,
+    horasMaquinaProcesoCapMax: 2.666667, // pasteurizadora, sin contar frío
+    etapasNombres: [
+      '1. Recepción de materia','2. Estandarización de leche','3. Pasteurización',
+      '4. Homogenización (+leche en polvo)','5. Pre-enfriamiento','6. Inoculación (+cultivo)',
+      '7. Envasado','8. Incubación','9. Enfriado','10. Refrigerado'
+    ]
+  },
+  frutado: {
+    nombre: 'Yogurt Frutado Probiótico',
+    nombreCorto: 'yogurt_frutado',
+    unidadesCapacidadMax: 180,
+    mermaInoculacion: 0.02,
+    mermaMezclado: 0.10,
+    empaque: {
+      250: {envase:0.55, etiqueta:0.30, bolsa:0.035},
+      500: {envase:0.80, etiqueta:0.30, bolsa:0.035},
+      1000:{envase:1.30, etiqueta:0.30, bolsa:0.035}
+    },
+    gCultivoPorLitro: 1,      // 20 g probiótico / L
+    gArandanoPorLitro: 100,    // 100 g arándano / L
+    gAzucarPorLitro: 1000,       // 1 kg azúcar / L
+    gasSolesPorLitro: 20.48/80,
+    congeladorKw: 0.365,
+    refrigeradorKw: 0.24,
+    tarifaElectricidad: 0.79,
+    horasCongeladorPorDia: 4,
+    horasRefrigeradorPorDia: 24,
+    fijoAguaPlanta: 42,
+    fijoDepreciacionMantenimiento: 3,
+    fijoMarketing: 150,
+    fijoContador: 25,
+    fijoEppMes: 2.9*5,
+    diasProduccionMax: 5,
+    sueldoOperarioMes: 1500,
+    diasTrabajoMes: 22,
+    horasDiaTrabajo: 8,
+    tarifaMODhora: 8.522727,
+    utilidadDefault: 0.33,
+    impuestoDefault: 0.015,
+    horasHombreProcesoCapMax: 0.333333+0.666667+2.666667+2+0.2+20.4+12.24+0.34,
+    horasMaquinaProcesoCapMax: 2.666667,
+    etapasNombres: [
+      '1. Recepción de materia','2. Control de calidad','3. Tamizado','4. Pasteurizado',
+      '5. Enfriamiento','6. Inoculación (+cultivo)','7. Incubación','8. Enfriado',
+      '9. Mezclado (+arándano)','10. Envasado','11. Enfriamiento','12. Almacenamiento'
+    ]
+  }
+};
+
+let productoActual = null; // 'griego' | 'frutado'
+let presentacionActual = 500;
+let historial = JSON.parse(localStorage.getItem('historial_yogurt_v2') || '[]');
+
+// Campos de cantidad que se autocalculan salvo que el operario los edite a mano
+let camposManuales = {cantCultivo:false, cantLechePolvo:false, cantArandano:false, cantAzucar:false};
+
+/* ══════════════════════════════════════════════════════════
+   SELECCIÓN DE PRODUCTO
+   ══════════════════════════════════════════════════════════ */
+function seleccionarProducto(prod){
+  productoActual = prod;
+  document.getElementById('selectorProducto').classList.add('hidden');
+  document.getElementById('appPrincipal').classList.remove('hidden');
+  document.getElementById('camposGriego').classList.toggle('hidden', prod !== 'griego');
+  document.getElementById('camposFrutado').classList.toggle('hidden', prod !== 'frutado');
+  document.getElementById('headerTitulo').textContent = 'CITEagroindustrial Huallaga';
+  document.getElementById('tituloApp').textContent = 'ASISTENTE DE PLANTA DIGITAL · ' + (prod==='griego'?'YOGURT GRIEGO':'YOGURT FRUTADO');
+  document.getElementById('impuestoRenta').value = (CONST[prod].impuestoDefault*100);
+  document.getElementById('margenUtilidad').value = (CONST[prod].utilidadDefault*100);
+  // Al cambiar de producto, todos los campos vuelven a autocalcularse
+  camposManuales = {cantCultivo:false, cantLechePolvo:false, cantArandano:false, cantAzucar:false};
+  actualizarBarraLote();
+  autocompletarInsumos();
+  recalcularTodo();
+  renderHistorial();
+}
+
+function cambiarProducto(){
+  document.getElementById('appPrincipal').classList.add('hidden');
+  document.getElementById('selectorProducto').classList.remove('hidden');
+}
+
+/* ══════════════════════════════════════════════════════════
+   AUTOCÁLCULO DE INSUMOS — 20g/L probiótico, 50g/L leche en polvo,
+   100g/L arándano, 50g/L azúcar. El operario puede sobrescribir
+   cualquier campo; una vez editado a mano, deja de autocalcularse
+   hasta que cambie de producto.
+   ══════════════════════════════════════════════════════════ */
+function marcarManual(inputId, tagId){
+  camposManuales[inputId] = true;
+  const tag = document.getElementById(tagId);
+  if(tag){ tag.textContent = 'manual'; tag.classList.add('manual'); }
+  recalcularTodo();
+}
+
+function onCambioLitros(){
+  autocompletarInsumos();
+  recalcularTodo();
+}
+
+function autocompletarInsumos(){
+  if(!productoActual) return;
+  const c = CONST[productoActual];
+  const litros = parseFloat(document.getElementById('litrosLeche').value) || 0;
+
+  const setSiAuto = (inputId, tagId, gramosPorLitro, enKg)=>{
+    if(camposManuales[inputId]) return; // el operario ya lo editó, no lo tocamos
+    const el = document.getElementById(inputId);
+    if(!el) return;
+    const totalGramos = litros * gramosPorLitro;
+    const valor = enKg ? totalGramos/1000 : totalGramos;
+    el.value = Number(valor.toFixed(3));
+    const tag = document.getElementById(tagId);
+    if(tag){ tag.textContent = 'auto: '+gramosPorLitro+'g/L'; tag.classList.remove('manual'); }
+  };
+
+  if(productoActual==='griego'){
+    setSiAuto('cantCultivo','tagCultivo', c.gCultivoPorLitro, false);       // gramos
+    setSiAuto('cantLechePolvo','tagLechePolvo', c.gLechePolvoPorLitro, true); // kg
+  } else {
+    setSiAuto('cantCultivo','tagCultivo', c.gCultivoPorLitro, false);       // gramos
+    setSiAuto('cantArandano','tagArandano', c.gArandanoPorLitro, true);     // kg
+    setSiAuto('cantAzucar','tagAzucar', c.gAzucarPorLitro, true);           // kg
+  }
+}
+
+function actualizarBarraLote(){
+  document.getElementById('loteIdBar').textContent = generarNumeroLote();
+  const hoy = new Date();
+  document.getElementById('fechaBar').textContent =
+    String(hoy.getDate()).padStart(2,'0')+'/'+String(hoy.getMonth()+1).padStart(2,'0')+'/'+hoy.getFullYear();
+}
+
+/* ══════════════════════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════════════════════ */
+function cambiarTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active', c.id==='tab-'+tab));
+}
+
+function elegirPresentacion(ml){
+  presentacionActual = ml;
+  document.querySelectorAll('.chip-presentacion button').forEach(b=>{
+    b.classList.toggle('active', parseInt(b.dataset.pres)===ml);
+  });
+  recalcularTodo();
+}
+
+/* ══════════════════════════════════════════════════════════
+   MOTOR DE CÁLCULO
+   ══════════════════════════════════════════════════════════ */
+function getInputs(){
+  return {
+    litrosLeche: parseFloat(document.getElementById('litrosLeche').value) || 0,
+    precioLeche: parseFloat(document.getElementById('precioLeche').value) || 0,
+    cantCultivo: parseFloat(document.getElementById('cantCultivo').value) || 0,
+    precioCultivo: parseFloat(document.getElementById('precioCultivo').value) || 0,
+    cantLechePolvo: parseFloat(document.getElementById('cantLechePolvo')?.value) || 0,
+    precioLechePolvo: parseFloat(document.getElementById('precioLechePolvo')?.value) || 0,
+    cantArandano: parseFloat(document.getElementById('cantArandano')?.value) || 0,
+    precioArandano: parseFloat(document.getElementById('precioArandano')?.value) || 0,
+    cantAzucar: parseFloat(document.getElementById('cantAzucar')?.value) || 0,
+    precioAzucar: parseFloat(document.getElementById('precioAzucar')?.value) || 0,
+    margenUtilidad: parseFloat(document.getElementById('margenUtilidad')?.value)/100 || 0.35,
+    impuestoRenta: parseFloat(document.getElementById('impuestoRenta')?.value)/100 || 0.015
+  };
+}
+
+function calcularFlujo(inp, c){
+  // factor: proporción de litros ingresados respecto a la capacidad máxima (80L)
+  const factor = inp.litrosLeche / CAPACIDAD_MAXIMA_LITROS;
+  let litroActual = inp.litrosLeche;
+  let etapas = [];
+
+  if(productoActual === 'griego'){
+    let despuesLechePolvo = litroActual + (inp.cantLechePolvo>0 ? litroActual*0.0125 : 0);
+    let despuesCultivo = despuesLechePolvo + despuesLechePolvo*c.mermaInoculacion;
+    const vals = [
+      litroActual, litroActual, litroActual,
+      despuesLechePolvo, despuesLechePolvo, despuesCultivo,
+      null, despuesCultivo, despuesCultivo, despuesCultivo
+    ];
+    litroActual = despuesCultivo;
+    etapas = c.etapasNombres.map((n,i)=>({nombre:n, valor: vals[i]===null?'—':vals[i].toFixed(1)+' L'}));
+  } else {
+    let despuesCultivo = litroActual + litroActual*c.mermaInoculacion;
+    let despuesFruta = despuesCultivo + despuesCultivo*c.mermaMezclado;
+    const vals = [
+      litroActual, litroActual, litroActual, litroActual, litroActual,
+      despuesCultivo, despuesCultivo, despuesCultivo,
+      despuesFruta, null, despuesFruta, despuesFruta
+    ];
+    litroActual = despuesFruta;
+    etapas = c.etapasNombres.map((n,i)=>({nombre:n, valor: vals[i]===null?'—':vals[i].toFixed(1)+' L'}));
+  }
+
+  const litrosFinal = litroActual;
+  const unidades = Math.round(c.unidadesCapacidadMax * factor * (500/presentacionActual));
+  return {etapas, litrosFinal, unidades, factor};
+}
+
+function calcularCostos(inp, c, flujo){
+  const factor = flujo.factor;
+  const unidades = flujo.unidades;
+
+  // 1. Materia prima — VARIABLE, según lo ingresado por el operario
+  let mp = [];
+  mp.push({n:'Leche fresca', cant:inp.litrosLeche+' L', costo:inp.litrosLeche*inp.precioLeche});
+  mp.push({n:'Cultivo', cant:inp.cantCultivo+' g', costo:inp.cantCultivo*inp.precioCultivo});
+  if(productoActual==='griego'){
+    mp.push({n:'Leche en polvo', cant:inp.cantLechePolvo+' kg', costo:inp.cantLechePolvo*inp.precioLechePolvo});
+  } else {
+    mp.push({n:'Arándano (mermelada)', cant:inp.cantArandano+' kg', costo:inp.cantArandano*inp.precioArandano});
+    mp.push({n:'Azúcar', cant:inp.cantAzucar+' kg', costo:inp.cantAzucar*inp.precioAzucar});
+  }
+  const totalMP = mp.reduce((s,i)=>s+i.costo,0);
+
+  // 2. Empaque — VARIABLE, según unidades reales a producir
+  const emp = c.empaque[presentacionActual];
+  let empaqueItems = [
+    {n: (productoActual==='griego'?'Envase/taper':'Botella plástico'), cant:unidades+' und', costo: unidades*emp.envase},
+    {n:'Etiqueta', cant:unidades+' und', costo: unidades*emp.etiqueta},
+    {n:'Bolsa (x100)', cant:unidades+' und', costo: unidades*emp.bolsa}
+  ];
+  const totalEmpaque = empaqueItems.reduce((s,i)=>s+i.costo,0);
+
+  // 3. Servicios — gas VARIABLE proporcional a litros
+  const gas = c.gasSolesPorLitro * inp.litrosLeche;
+
+  // Electricidad de frío: depende de DÍAS de cadena de frío, no directamente de litros.
+  // Regla del negocio: 20 L se venden en 7 días → dias_frio = 7 × (litros/20)
+  const diasFrio = inp.litrosLeche>0 ? DIAS_FRIO_REFERENCIA * (inp.litrosLeche/LITROS_REFERENCIA_FRIO) : 0;
+  const horasCongelador = c.horasCongeladorPorDia * (inp.litrosLeche/LITROS_REFERENCIA_FRIO); // fijo 4h por cada 20L, NO escala con días
+  const horasRefrigerador = diasFrio * c.horasRefrigeradorPorDia;
+  const kwhCongelador = horasCongelador * c.congeladorKw;
+  const kwhRefrigerador = horasRefrigerador * c.refrigeradorKw;
+  const electricidad = (kwhCongelador + kwhRefrigerador) * c.tarifaElectricidad;
+
+  const totalServicios = gas + electricidad;
+
+  // 4. MOD — horas de PROCESO escalan con litros; horas de MÁQUINA de frío usan días reales
+  const totalHorasHombre = c.horasHombreProcesoCapMax * factor;
+  const totalHorasMaquina = (c.horasMaquinaProcesoCapMax * factor) + horasCongelador + horasRefrigerador;
+  const totalMOD = totalHorasHombre * c.tarifaMODhora;
+
+  // 5. Gastos FIJOS del mes — SIEMPRE el monto completo, NO se prorratean
+  const totalFijos = c.fijoAguaPlanta + c.fijoDepreciacionMantenimiento +
+                      c.fijoMarketing + c.fijoContador + c.fijoEppMes;
+
+  const totalCostosVariables = totalMP + totalEmpaque + totalServicios + totalMOD;
+  const capitalTrabajo = totalCostosVariables + totalFijos;
+  const costoUnitario = unidades>0 ? capitalTrabajo/unidades : 0;
+
+  const utilidad = costoUnitario * inp.margenUtilidad;
+  const impuesto = (costoUnitario + utilidad) * inp.impuestoRenta;
+  const precioVenta = costoUnitario + utilidad + impuesto;
+
+  return {
+    mp, totalMP, empaqueItems, totalEmpaque,
+    gas, electricidad, totalServicios, diasFrio, horasCongelador, horasRefrigerador,
+    totalHorasHombre, totalHorasMaquina, totalMOD,
+    totalFijos, totalCostosVariables, capitalTrabajo,
+    costoUnitario, utilidad, impuesto, precioVenta, unidades, factor
+  };
+}
+
+function fmt(n){ return 'S/ ' + (isFinite(n)?n:0).toFixed(2); }
+
+function recalcularTodo(){
+  if(!productoActual) return;
+  const inp = getInputs();
+  const c = CONST[productoActual];
+  const flujo = calcularFlujo(inp, c);
+  const costos = calcularCostos(inp, c, flujo);
+
+  // --- Aviso de capacidad ---
+  const pctCap = (inp.litrosLeche/CAPACIDAD_MAXIMA_LITROS)*100;
+  const aviso = document.getElementById('avisoCapacidad');
+  aviso.classList.toggle('hidden', pctCap>=95);
+
+  // --- Tab Producción ---
+  const flujoDiv = document.getElementById('flujoProceso');
+  flujoDiv.innerHTML = flujo.etapas.map(e=>`
+    <div class="flujo-etapa">
+      <span class="nombre">${e.nombre}</span>
+      <span class="valor">${e.valor}</span>
+    </div>`).join('');
+  document.getElementById('kpiLitrosProc').textContent = flujo.litrosFinal.toFixed(1)+' L';
+  document.getElementById('kpiUnidades').textContent = flujo.unidades;
+  document.getElementById('kpiCapacidad').textContent = pctCap.toFixed(0)+'%';
+  document.getElementById('kpiDias').textContent = (c.diasProduccionMax*flujo.factor).toFixed(1)+' días';
+
+  // --- Tab Costos ---
+  document.getElementById('tablaMP').innerHTML = `
+    <tr><th>Insumo</th><th>Cantidad</th><th>Costo</th></tr>
+    ${costos.mp.map(i=>`<tr><td>${i.n}</td><td>${i.cant}</td><td>${fmt(i.costo)}</td></tr>`).join('')}
+    <tr class="total"><td colspan="2">Subtotal materia prima</td><td>${fmt(costos.totalMP)}</td></tr>`;
+
+  document.getElementById('tablaEmpaque').innerHTML = `
+    <tr><th>Ítem</th><th>Cantidad</th><th>Costo</th></tr>
+    ${costos.empaqueItems.map(i=>`<tr><td>${i.n}</td><td>${i.cant}</td><td>${fmt(i.costo)}</td></tr>`).join('')}
+    <tr class="total"><td colspan="2">Subtotal empaque</td><td>${fmt(costos.totalEmpaque)}</td></tr>`;
+
+  document.getElementById('tablaServicios').innerHTML = `
+    <tr><th>Servicio</th><th>Ref.</th><th>Costo</th></tr>
+    <tr><td>Gas (pasteurizado)</td><td>${inp.litrosLeche} L procesados</td><td>${fmt(costos.gas)}</td></tr>
+    <tr><td>Electricidad congelador</td><td>${costos.horasCongelador.toFixed(1)} h (${costos.diasFrio.toFixed(1)} días)</td><td>—</td></tr>
+    <tr><td>Electricidad refrigerador</td><td>${costos.horasRefrigerador.toFixed(1)} h (${costos.diasFrio.toFixed(1)} días)</td><td>—</td></tr>
+    <tr><td>Subtotal electricidad frío</td><td></td><td>${fmt(costos.electricidad)}</td></tr>
+    <tr class="total"><td colspan="2">Subtotal servicios</td><td>${fmt(costos.totalServicios)}</td></tr>`;
+
+  document.getElementById('tablaMOD').innerHTML = `
+    <tr><th>Concepto</th><th>Cantidad</th><th>Costo</th></tr>
+    <tr><td>Horas hombre</td><td>${costos.totalHorasHombre.toFixed(2)} h</td><td>—</td></tr>
+    <tr><td>Horas máquina</td><td>${costos.totalHorasMaquina.toFixed(2)} h</td><td>—</td></tr>
+    <tr class="total"><td colspan="2">Subtotal mano de obra directa</td><td>${fmt(costos.totalMOD)}</td></tr>`;
+
+  document.getElementById('tablaGastos').innerHTML = `
+    <tr><th>Concepto</th><th>Ref.</th><th>Costo</th></tr>
+    <tr><td>Agua planta</td><td>mes completo</td><td>${fmt(c.fijoAguaPlanta)}</td></tr>
+    <tr><td>Marketing</td><td>mes completo</td><td>${fmt(c.fijoMarketing)}</td></tr>
+    <tr><td>Contador</td><td>mes completo</td><td>${fmt(c.fijoContador)}</td></tr>
+    <tr><td>Depreciación y mantenimiento</td><td>mes completo</td><td>${fmt(c.fijoDepreciacionMantenimiento)}</td></tr>
+    <tr><td>EPP (${c.diasProduccionMax} días)</td><td>mes completo</td><td>${fmt(c.fijoEppMes)}</td></tr>
+    <tr class="total"><td colspan="2">Subtotal gastos fijos</td><td>${fmt(costos.totalFijos)}</td></tr>`;
+
+  document.getElementById('tablaResumenCostos').innerHTML = `
+    <tr><th>Categoría</th><th>Tipo</th><th>Costo</th></tr>
+    <tr><td>Materia prima e insumos</td><td><span class="badge-tipo variable">VAR</span></td><td>${fmt(costos.totalMP)}</td></tr>
+    <tr><td>Empaque</td><td><span class="badge-tipo variable">VAR</span></td><td>${fmt(costos.totalEmpaque)}</td></tr>
+    <tr><td>Servicios (gas/electricidad)</td><td><span class="badge-tipo variable">VAR</span></td><td>${fmt(costos.totalServicios)}</td></tr>
+    <tr><td>Mano de obra directa</td><td><span class="badge-tipo variable">VAR</span></td><td>${fmt(costos.totalMOD)}</td></tr>
+    <tr><td>Gastos fijos del mes</td><td><span class="badge-tipo fijo">FIJO</span></td><td>${fmt(costos.totalFijos)}</td></tr>
+    <tr class="subtotal"><td colspan="2">Total costos variables</td><td>${fmt(costos.totalCostosVariables)}</td></tr>
+    <tr class="subtotal"><td colspan="2">Total costos fijos</td><td>${fmt(costos.totalFijos)}</td></tr>
+    <tr class="total"><td colspan="2">Capital de trabajo total</td><td>${fmt(costos.capitalTrabajo)}</td></tr>`;
+
+  // --- Tab Rentabilidad ---
+  const kpiBox = document.getElementById('kpiCostoUndBox');
+  kpiBox.classList.toggle('alerta', pctCap<50);
+  document.getElementById('kpiCostoUnd').textContent = fmt(costos.costoUnitario);
+  document.getElementById('kpiMargen').textContent = (inp.margenUtilidad*100).toFixed(0)+'%';
+  document.getElementById('kpiPrecioVenta').textContent = fmt(costos.precioVenta);
+
+  document.getElementById('tablaDesglosePrecio').innerHTML = `
+    <tr><th>Concepto</th><th>Valor</th></tr>
+    <tr><td>Costo de producción por unidad</td><td>${fmt(costos.costoUnitario)}</td></tr>
+    <tr><td>Utilidad (${(inp.margenUtilidad*100).toFixed(0)}%)</td><td>${fmt(costos.utilidad)}</td></tr>
+    <tr><td>Impuesto a la renta (${(inp.impuestoRenta*100).toFixed(1)}%)</td><td>${fmt(costos.impuesto)}</td></tr>
+    <tr class="total"><td>Precio de venta al x mayor</td><td>${fmt(costos.precioVenta)}</td></tr>`;
+
+  // Comparativo de escalabilidad: distintos niveles de litros vs capacidad máxima
+  const nivelesLitros = [10, 20, 40, 60, 80];
+  let filasEscala = nivelesLitros.map(litros=>{
+    const factorN = litros/CAPACIDAD_MAXIMA_LITROS;
+    const inpN = {...inp, litrosLeche: litros,
+      cantCultivo: inp.cantCultivo*(litros/(inp.litrosLeche||1)),
+      cantLechePolvo: (inp.cantLechePolvo||0)*(litros/(inp.litrosLeche||1)),
+      cantArandano: (inp.cantArandano||0)*(litros/(inp.litrosLeche||1)),
+      cantAzucar: (inp.cantAzucar||0)*(litros/(inp.litrosLeche||1))};
+    const flujoN = calcularFlujo(inpN, c);
+    const costosN = calcularCostos(inpN, c, flujoN);
+    return {litros, unidades:flujoN.unidades, costoUnd:costosN.costoUnitario, pctCap:factorN*100};
+  });
+  document.getElementById('tablaEscala').innerHTML = `
+    <tr><th>Litros/mes</th><th>% Capacidad</th><th>Unidades</th><th>Costo/und</th></tr>
+    ${filasEscala.map(f=>`
+      <tr class="${Math.abs(f.litros-inp.litrosLeche)<0.5?'actual':''}">
+        <td>${f.litros} L</td>
+        <td>${f.pctCap.toFixed(0)}%</td>
+        <td>${f.unidades}</td>
+        <td>${fmt(f.costoUnd)}</td>
+      </tr>`).join('')}`;
+
+  // --- Resumen inferior (guardar) ---
+  actualizarBarraLote();
+  document.getElementById('loteIdPreview').textContent = generarNumeroLote();
+  document.getElementById('resProducto').textContent = c.nombre;
+  document.getElementById('resPresentacion').textContent = presentacionActual+' ml';
+  document.getElementById('resUnidades').textContent = flujo.unidades;
+  document.getElementById('resCostoUnd').textContent = fmt(costos.costoUnitario);
+  document.getElementById('resPrecioVenta').textContent = fmt(costos.precioVenta);
+  document.getElementById('resCapital').textContent = fmt(costos.capitalTrabajo);
+  document.getElementById('resHorasMaq').textContent = costos.totalHorasMaquina.toFixed(2)+' h';
+  document.getElementById('resHorasHom').textContent = costos.totalHorasHombre.toFixed(2)+' h';
+
+  window._ultimoCalculo = {inp, c, flujo, costos};
+}
+
+/* ══════════════════════════════════════════════════════════
+   GUARDADO DE LOTE
+   ══════════════════════════════════════════════════════════ */
+function generarNumeroLote(){
+  const fecha = new Date();
+  const dd = String(fecha.getDate()).padStart(2,'0');
+  const mm = String(fecha.getMonth()+1).padStart(2,'0');
+  const yyyy = fecha.getFullYear();
+  const clave = `${dd}${mm}${yyyy}`;
+  const lotesHoy = historial.filter(r=>r.lote && r.lote.includes(clave)).length;
+  const nn = String(lotesHoy+1).padStart(2,'0');
+  return `Lote_${clave}${nn}`;
+}
+
+function guardarLote(){
+  if(!window._ultimoCalculo) recalcularTodo();
+  const {inp, c, flujo, costos} = window._ultimoCalculo;
+  const loteId = generarNumeroLote();
+  const fecha = new Date();
+  const fechaStr = String(fecha.getDate()).padStart(2,'0')+'/'+String(fecha.getMonth()+1).padStart(2,'0')+'/'+fecha.getFullYear();
+
+  const variablesJson = productoActual==='griego' ? {
+    litros_leche: inp.litrosLeche, precio_leche: inp.precioLeche,
+    cultivo_g: inp.cantCultivo, precio_cultivo: inp.precioCultivo,
+    leche_polvo_kg: inp.cantLechePolvo, precio_leche_polvo: inp.precioLechePolvo,
+    litros_producidos: flujo.litrosFinal,
+    pct_capacidad: (inp.litrosLeche/CAPACIDAD_MAXIMA_LITROS*100).toFixed(1),
+    precio_venta: costos.precioVenta,
+    impuesto_renta_pct: inp.impuestoRenta*100
+  } : {
+    litros_leche: inp.litrosLeche, precio_leche: inp.precioLeche,
+    cultivo_g: inp.cantCultivo, precio_cultivo: inp.precioCultivo,
+    arandano_kg: inp.cantArandano, precio_arandano: inp.precioArandano,
+    azucar_kg: inp.cantAzucar, precio_azucar: inp.precioAzucar,
+    litros_producidos: flujo.litrosFinal,
+    pct_capacidad: (inp.litrosLeche/CAPACIDAD_MAXIMA_LITROS*100).toFixed(1),
+    precio_venta: costos.precioVenta,
+    impuesto_renta_pct: inp.impuestoRenta*100
+  };
+
+  const registro = {
+    lote: loteId,
+    fecha_proceso: fechaStr,
+    producto: c.nombreCorto,
+    presentacion_g: presentacionActual,
+    unidades_producidas: flujo.unidades,
+    costo_und_prod: Number(costos.costoUnitario.toFixed(4)),
+    capital_trabajo: Number(costos.capitalTrabajo.toFixed(2)),
+    horas_maquinas: Number(costos.totalHorasMaquina.toFixed(2)),
+    horas_hombre: Number(costos.totalHorasHombre.toFixed(2)),
+    variables_json: JSON.stringify(variablesJson),
+    timestamp_registro: fecha.toISOString(),
+    sincronizado: false
+  };
+
+  historial.unshift(registro);
+  localStorage.setItem('historial_yogurt_v2', JSON.stringify(historial));
+  renderHistorial();
+  mostrarToast('✅ Lote '+loteId+' guardado localmente');
+  intentarSincronizar();
+}
+
+function renderHistorial(){
+  const cont = document.getElementById('historialLista');
+  const propios = historial.filter(r=> !productoActual || r.producto===CONST[productoActual].nombreCorto);
+  if(propios.length===0){
+    cont.innerHTML = '<div class="nota">Aún no hay lotes guardados para este producto.</div>';
+    return;
+  }
+  cont.innerHTML = propios.map((r)=>{
+    const idxReal = historial.indexOf(r);
+    return `
+    <div class="historial-item">
+      <div class="info">
+        <b>${r.lote}</b>
+        ${r.fecha_proceso} · ${r.unidades_producidas} und · ${fmt(r.costo_und_prod)}/und
+      </div>
+      <div style="display:flex; align-items:center;">
+        <span>${r.sincronizado ? '🟢' : '🟡'}</span>
+        <button class="del" onclick="eliminarLote(${idxReal})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function eliminarLote(idx){
+  historial.splice(idx,1);
+  localStorage.setItem('historial_yogurt_v2', JSON.stringify(historial));
+  renderHistorial();
+}
+
+function mostrarToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+/* ══════════════════════════════════════════════════════════
+   SINCRONIZACIÓN CON APPS SCRIPT
+   ══════════════════════════════════════════════════════════ */
+function actualizarBadge(){
+  const badge = document.getElementById('badgeConexion');
+  if(APPS_SCRIPT_URL.includes('PENDIENTE')){
+    badge.className = 'badge err';
+    badge.textContent = '⚪ Backend no configurado';
+    return;
+  }
+  if(!navigator.onLine){
+    badge.className = 'badge pend';
+    badge.textContent = '🟡 Sin conexión';
+    return;
+  }
+  const pendientes = historial.filter(r=>!r.sincronizado).length;
+  if(pendientes>0){
+    badge.className = 'badge pend';
+    badge.textContent = `🟡 ${pendientes} pendiente(s)`;
+  } else {
+    badge.className = 'badge ok';
+    badge.textContent = '🟢 Sincronizado';
+  }
+}
+
+async function intentarSincronizar(){
+  if(!navigator.onLine || APPS_SCRIPT_URL.includes('PENDIENTE')){
+    actualizarBadge();
+    return;
+  }
+  const pendientes = historial.filter(r=>!r.sincronizado);
+  for(const registro of pendientes){
+    try{
+      const fd = new FormData();
+      fd.append('data', JSON.stringify(registro));
+      await fetch(APPS_SCRIPT_URL, {method:'POST', mode:'no-cors', body:fd});
+      registro.sincronizado = true;
+    }catch(e){
+      console.error('Error sincronizando lote', registro.lote, e);
+    }
+  }
+  localStorage.setItem('historial_yogurt_v2', JSON.stringify(historial));
+  renderHistorial();
+  actualizarBadge();
+}
+
+window.addEventListener('online', intentarSincronizar);
+window.addEventListener('offline', actualizarBadge);
+
+/* ══════════════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════════════ */
+actualizarBadge();
+setTimeout(intentarSincronizar, 800);
+</script>
+</body>
+</html>
