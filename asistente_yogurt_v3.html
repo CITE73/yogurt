@@ -59,6 +59,8 @@ header .sub{font-size:.72rem; color:#D9C2EE; margin-top:1px;}
 .panel-inputs h3{font-size:.78rem; text-transform:uppercase; letter-spacing:.5px; color:var(--violeta); margin-bottom:14px; font-weight:700;}
 .campo{margin-bottom:12px;}
 .campo label{display:block; font-size:.78rem; color:var(--txt-s); margin-bottom:4px; font-weight:500;}
+.tag-auto{display:inline-block; background:var(--violeta-bg); color:var(--violeta-d); font-size:.62rem; font-weight:700; padding:1px 7px; border-radius:8px; margin-left:4px; vertical-align:middle;}
+.tag-auto.manual{background:#FFF4E0; color:var(--ambar);}
 .campo input, .campo select{width:100%; padding:11px 12px; border:1.5px solid var(--borde); border-radius:9px; font-size:.95rem; font-family:'DM Sans'; background:var(--crema); color:var(--txt);}
 .campo input:focus, .campo select:focus{outline:none; border-color:var(--violeta-lt); background:#fff;}
 .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
@@ -192,7 +194,7 @@ header .sub{font-size:.72rem; color:#D9C2EE; margin-top:1px;}
   <div class="row2">
     <div class="campo">
       <label>Leche fresca — Cantidad (litros)</label>
-      <input type="number" id="litrosLeche" value="20" step="1" min="0" oninput="recalcularTodo()">
+      <input type="number" id="litrosLeche" value="20" step="1" min="0" oninput="onCambioLitros()">
     </div>
     <div class="campo">
       <label>Leche fresca — Precio (S/·L)</label>
@@ -202,19 +204,19 @@ header .sub{font-size:.72rem; color:#D9C2EE; margin-top:1px;}
 
   <div class="row2">
     <div class="campo">
-      <label>Cultivo — Cantidad (gramos)</label>
-      <input type="number" id="cantCultivo" value="5" step="0.5" oninput="recalcularTodo()">
+      <label>Cultivo/Probiótico — Cantidad (g) <span class="tag-auto" id="tagCultivo">auto: 20g/L</span></label>
+      <input type="number" id="cantCultivo" value="400" step="0.5" oninput="marcarManual('cantCultivo','tagCultivo')">
     </div>
     <div class="campo">
-      <label>Cultivo — Precio (S/·g)</label>
+      <label>Cultivo/Probiótico — Precio (S/·g)</label>
       <input type="number" id="precioCultivo" value="0.40" step="0.01" oninput="recalcularTodo()">
     </div>
   </div>
 
   <div id="camposGriego" class="row2">
     <div class="campo">
-      <label>Leche en polvo — Cantidad (kg)</label>
-      <input type="number" id="cantLechePolvo" value="7" step="0.5" oninput="recalcularTodo()">
+      <label>Leche en polvo — Cantidad (kg) <span class="tag-auto" id="tagLechePolvo">auto: 50g/L</span></label>
+      <input type="number" id="cantLechePolvo" value="1" step="0.05" oninput="marcarManual('cantLechePolvo','tagLechePolvo')">
     </div>
     <div class="campo">
       <label>Leche en polvo — Precio (S/·kg)</label>
@@ -224,22 +226,24 @@ header .sub{font-size:.72rem; color:#D9C2EE; margin-top:1px;}
 
   <div id="camposFrutado" class="row2">
     <div class="campo">
-      <label>Arándano (mermelada) — Cant. (kg)</label>
-      <input type="number" id="cantArandano" value="7" step="0.5" oninput="recalcularTodo()">
+      <label>Arándano (mermelada) — Cant. (kg) <span class="tag-auto" id="tagArandano">auto: 100g/L</span></label>
+      <input type="number" id="cantArandano" value="2" step="0.05" oninput="marcarManual('cantArandano','tagArandano')">
     </div>
     <div class="campo">
       <label>Arándano — Precio (S/·kg)</label>
       <input type="number" id="precioArandano" value="2.80" step="0.01" oninput="recalcularTodo()">
     </div>
     <div class="campo">
-      <label>Azúcar — Cantidad (kg)</label>
-      <input type="number" id="cantAzucar" value="0.7" step="0.1" oninput="recalcularTodo()">
+      <label>Azúcar — Cantidad (kg) <span class="tag-auto" id="tagAzucar">auto: 50g/L</span></label>
+      <input type="number" id="cantAzucar" value="1" step="0.05" oninput="marcarManual('cantAzucar','tagAzucar')">
     </div>
     <div class="campo">
       <label>Azúcar — Precio (S/·kg)</label>
       <input type="number" id="precioAzucar" value="0.14" step="0.01" oninput="recalcularTodo()">
     </div>
   </div>
+
+  <div class="nota" style="margin-bottom:4px;">🔄 Las cantidades marcadas <b>auto</b> se recalculan solas según los litros de leche. Puedes escribir un valor distinto en cualquier momento para ajustarlo manualmente.</div>
 
   <div class="campo" style="margin-top:4px;">
     <label>Presentación del producto final</label>
@@ -386,8 +390,15 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxL7ouy-yQtVCZ-
    Capacidad máxima de planta = 80 litros de leche / mes
    Costos FIJOS = monto completo del mes/lote, NO se prorratean
    Costos VARIABLES = escalan proporcionalmente a litros procesados
+
+   CADENA DE FRÍO: la empresaria vende 20 L en 6 días, por eso procesa
+   20 L/semana (~7 días de refrigerado). A más litros, más días necesita
+   para vender todo, así que refrigerado y congelador escalan igual:
+   dias_frio = 7 × (litros / 20)  →  80 L = 28 días
    ══════════════════════════════════════════════════════════ */
 const CAPACIDAD_MAXIMA_LITROS = 80;
+const LITROS_REFERENCIA_FRIO = 20;
+const DIAS_FRIO_REFERENCIA = 7;
 
 const CONST = {
   griego: {
@@ -400,9 +411,18 @@ const CONST = {
       500: {envase:0.34, etiqueta:0.30, bolsa:0.035},
       1000:{envase:0.55, etiqueta:0.30, bolsa:0.035}
     },
-    // Costos VARIABLES por litro de leche (derivados de: valor_batch80L / 80)
+    // Autocálculo de insumos por litro de leche (editable manualmente en la app)
+    gLechePolvoPorLitro: 50,   // 50 g leche en polvo / L
+    gCultivoPorLitro: 20,      // 20 g probiótico / L
+    // Gas — VARIABLE, proporcional a litros (no cambia con días de frío)
     gasSolesPorLitro: 32.915252/80,
-    electricidadSolesPorLitro: 19.355/80,
+    // Electricidad de EQUIPOS DE FRÍO — depende de horas reales de congelador+refrigerador,
+    // que a su vez dependen de los días de cadena de frío (ver DIAS_FRIO_REFERENCIA)
+    congeladorKw: 0.365,
+    refrigeradorKw: 0.24,
+    tarifaElectricidad: 0.79,
+    horasCongeladorPorDia: 24,   // el congelador trabaja continuo mientras dura el enfriado inicial
+    horasRefrigeradorPorDia: 24, // el refrigerador trabaja continuo durante toda la cadena de frío
     // Costos FIJOS del mes — SIEMPRE completos, no se dividen entre litros
     fijoAguaPlanta: 84,
     fijoDepreciacionMantenimiento: 3,
@@ -416,9 +436,9 @@ const CONST = {
     tarifaMODhora: 8.522727,
     utilidadDefault: 0.40,
     impuestoDefault: 0.015,
-    // Horas hombre/máquina totales a capacidad máxima (80L) — escalan proporcional a litros
-    horasHombreCapMax: 0.333333+0.333333+2.666667+0.2+2.1+0.21+0.029833+21.42,
-    horasMaquinaCapMax: 2.666667+0.714+4+96,
+    // Horas hombre de PROCESO (sin contar refrigerado) a capacidad máxima (80L) — escalan con litros
+    horasHombreProcesoCapMax: 0.333333+0.333333+2.666667+0.2+2.1+0.21+0.029833+21.42,
+    horasMaquinaProcesoCapMax: 2.666667, // pasteurizadora, sin contar frío
     etapasNombres: [
       '1. Recepción de materia','2. Estandarización de leche','3. Pasteurización',
       '4. Homogenización (+leche en polvo)','5. Pre-enfriamiento','6. Inoculación (+cultivo)',
@@ -436,8 +456,15 @@ const CONST = {
       500: {envase:0.80, etiqueta:0.30, bolsa:0.035},
       1000:{envase:1.30, etiqueta:0.30, bolsa:0.035}
     },
+    gCultivoPorLitro: 20,      // 20 g probiótico / L
+    gArandanoPorLitro: 100,    // 100 g arándano / L
+    gAzucarPorLitro: 50,       // 50 g azúcar / L
     gasSolesPorLitro: 20.48/80,
-    electricidadSolesPorLitro: 19.355/80,
+    congeladorKw: 0.365,
+    refrigeradorKw: 0.24,
+    tarifaElectricidad: 0.79,
+    horasCongeladorPorDia: 24,
+    horasRefrigeradorPorDia: 24,
     fijoAguaPlanta: 42,
     fijoDepreciacionMantenimiento: 3,
     fijoMarketing: 150,
@@ -450,8 +477,8 @@ const CONST = {
     tarifaMODhora: 8.522727,
     utilidadDefault: 0.33,
     impuestoDefault: 0.015,
-    horasHombreCapMax: 0.333333+0.666667+2.666667+2+0.2+20.4+12.24+0.34,
-    horasMaquinaCapMax: 2.666667+0.714+4+96,
+    horasHombreProcesoCapMax: 0.333333+0.666667+2.666667+2+0.2+20.4+12.24+0.34,
+    horasMaquinaProcesoCapMax: 2.666667,
     etapasNombres: [
       '1. Recepción de materia','2. Control de calidad','3. Tamizado','4. Pasteurizado',
       '5. Enfriamiento','6. Inoculación (+cultivo)','7. Incubación','8. Enfriado',
@@ -463,6 +490,9 @@ const CONST = {
 let productoActual = null; // 'griego' | 'frutado'
 let presentacionActual = 500;
 let historial = JSON.parse(localStorage.getItem('historial_yogurt_v2') || '[]');
+
+// Campos de cantidad que se autocalculan salvo que el operario los edite a mano
+let camposManuales = {cantCultivo:false, cantLechePolvo:false, cantArandano:false, cantAzucar:false};
 
 /* ══════════════════════════════════════════════════════════
    SELECCIÓN DE PRODUCTO
@@ -477,7 +507,10 @@ function seleccionarProducto(prod){
   document.getElementById('tituloApp').textContent = 'ASISTENTE DE PLANTA DIGITAL · ' + (prod==='griego'?'YOGURT GRIEGO':'YOGURT FRUTADO');
   document.getElementById('impuestoRenta').value = (CONST[prod].impuestoDefault*100);
   document.getElementById('margenUtilidad').value = (CONST[prod].utilidadDefault*100);
+  // Al cambiar de producto, todos los campos vuelven a autocalcularse
+  camposManuales = {cantCultivo:false, cantLechePolvo:false, cantArandano:false, cantAzucar:false};
   actualizarBarraLote();
+  autocompletarInsumos();
   recalcularTodo();
   renderHistorial();
 }
@@ -485,6 +518,50 @@ function seleccionarProducto(prod){
 function cambiarProducto(){
   document.getElementById('appPrincipal').classList.add('hidden');
   document.getElementById('selectorProducto').classList.remove('hidden');
+}
+
+/* ══════════════════════════════════════════════════════════
+   AUTOCÁLCULO DE INSUMOS — 20g/L probiótico, 50g/L leche en polvo,
+   100g/L arándano, 50g/L azúcar. El operario puede sobrescribir
+   cualquier campo; una vez editado a mano, deja de autocalcularse
+   hasta que cambie de producto.
+   ══════════════════════════════════════════════════════════ */
+function marcarManual(inputId, tagId){
+  camposManuales[inputId] = true;
+  const tag = document.getElementById(tagId);
+  if(tag){ tag.textContent = 'manual'; tag.classList.add('manual'); }
+  recalcularTodo();
+}
+
+function onCambioLitros(){
+  autocompletarInsumos();
+  recalcularTodo();
+}
+
+function autocompletarInsumos(){
+  if(!productoActual) return;
+  const c = CONST[productoActual];
+  const litros = parseFloat(document.getElementById('litrosLeche').value) || 0;
+
+  const setSiAuto = (inputId, tagId, gramosPorLitro, enKg)=>{
+    if(camposManuales[inputId]) return; // el operario ya lo editó, no lo tocamos
+    const el = document.getElementById(inputId);
+    if(!el) return;
+    const totalGramos = litros * gramosPorLitro;
+    const valor = enKg ? totalGramos/1000 : totalGramos;
+    el.value = Number(valor.toFixed(3));
+    const tag = document.getElementById(tagId);
+    if(tag){ tag.textContent = 'auto: '+gramosPorLitro+'g/L'; tag.classList.remove('manual'); }
+  };
+
+  if(productoActual==='griego'){
+    setSiAuto('cantCultivo','tagCultivo', c.gCultivoPorLitro, false);       // gramos
+    setSiAuto('cantLechePolvo','tagLechePolvo', c.gLechePolvoPorLitro, true); // kg
+  } else {
+    setSiAuto('cantCultivo','tagCultivo', c.gCultivoPorLitro, false);       // gramos
+    setSiAuto('cantArandano','tagArandano', c.gArandanoPorLitro, true);     // kg
+    setSiAuto('cantAzucar','tagAzucar', c.gAzucarPorLitro, true);           // kg
+  }
 }
 
 function actualizarBarraLote(){
@@ -588,14 +665,23 @@ function calcularCostos(inp, c, flujo){
   ];
   const totalEmpaque = empaqueItems.reduce((s,i)=>s+i.costo,0);
 
-  // 3. Servicios — VARIABLE, proporcional a litros reales procesados
+  // 3. Servicios — gas VARIABLE proporcional a litros
   const gas = c.gasSolesPorLitro * inp.litrosLeche;
-  const electricidad = c.electricidadSolesPorLitro * inp.litrosLeche;
+
+  // Electricidad de frío: depende de DÍAS de cadena de frío, no directamente de litros.
+  // Regla del negocio: 20 L se venden en 7 días → dias_frio = 7 × (litros/20)
+  const diasFrio = inp.litrosLeche>0 ? DIAS_FRIO_REFERENCIA * (inp.litrosLeche/LITROS_REFERENCIA_FRIO) : 0;
+  const horasCongelador = diasFrio * c.horasCongeladorPorDia;
+  const horasRefrigerador = diasFrio * c.horasRefrigeradorPorDia;
+  const kwhCongelador = horasCongelador * c.congeladorKw;
+  const kwhRefrigerador = horasRefrigerador * c.refrigeradorKw;
+  const electricidad = (kwhCongelador + kwhRefrigerador) * c.tarifaElectricidad;
+
   const totalServicios = gas + electricidad;
 
-  // 4. MOD — VARIABLE, horas escalan proporcional a litros procesados
-  const totalHorasHombre = c.horasHombreCapMax * factor;
-  const totalHorasMaquina = c.horasMaquinaCapMax * factor;
+  // 4. MOD — horas de PROCESO escalan con litros; horas de MÁQUINA de frío usan días reales
+  const totalHorasHombre = c.horasHombreProcesoCapMax * factor;
+  const totalHorasMaquina = (c.horasMaquinaProcesoCapMax * factor) + horasCongelador + horasRefrigerador;
   const totalMOD = totalHorasHombre * c.tarifaMODhora;
 
   // 5. Gastos FIJOS del mes — SIEMPRE el monto completo, NO se prorratean
@@ -612,7 +698,7 @@ function calcularCostos(inp, c, flujo){
 
   return {
     mp, totalMP, empaqueItems, totalEmpaque,
-    gas, electricidad, totalServicios,
+    gas, electricidad, totalServicios, diasFrio, horasCongelador, horasRefrigerador,
     totalHorasHombre, totalHorasMaquina, totalMOD,
     totalFijos, totalCostosVariables, capitalTrabajo,
     costoUnitario, utilidad, impuesto, precioVenta, unidades, factor
@@ -659,7 +745,9 @@ function recalcularTodo(){
   document.getElementById('tablaServicios').innerHTML = `
     <tr><th>Servicio</th><th>Ref.</th><th>Costo</th></tr>
     <tr><td>Gas (pasteurizado)</td><td>${inp.litrosLeche} L procesados</td><td>${fmt(costos.gas)}</td></tr>
-    <tr><td>Electricidad</td><td>${inp.litrosLeche} L procesados</td><td>${fmt(costos.electricidad)}</td></tr>
+    <tr><td>Electricidad congelador</td><td>${costos.horasCongelador.toFixed(1)} h (${costos.diasFrio.toFixed(1)} días)</td><td>—</td></tr>
+    <tr><td>Electricidad refrigerador</td><td>${costos.horasRefrigerador.toFixed(1)} h (${costos.diasFrio.toFixed(1)} días)</td><td>—</td></tr>
+    <tr><td>Subtotal electricidad frío</td><td></td><td>${fmt(costos.electricidad)}</td></tr>
     <tr class="total"><td colspan="2">Subtotal servicios</td><td>${fmt(costos.totalServicios)}</td></tr>`;
 
   document.getElementById('tablaMOD').innerHTML = `
