@@ -685,9 +685,10 @@ function calcularCostos(inp, c, flujo){
   const totalMOD = totalHorasHombre * c.tarifaMODhora;
 
   // 5. Gastos FIJOS del mes — SIEMPRE el monto completo, NO se prorratean
-  const totalFijos = c.fijoAguaPlanta + c.fijoDepreciacionMantenimiento +
-                      c.fijoMarketing + c.fijoContador + c.fijoEppMes;
-
+  const bloquesFijo = Math.max(1, inp.litrosLeche / LITROS_REFERENCIA_FRIO); // 20L = 1 bloque, mínimo 1 bloque
+  const totalFijos = (c.fijoAguaPlanta + c.fijoDepreciacionMantenimiento +
+                    c.fijoMarketing + c.fijoContador + c.fijoEppMes) / bloquesFijo;
+  
   const totalCostosVariables = totalMP + totalEmpaque + totalServicios + totalMOD;
   const capitalTrabajo = totalCostosVariables + totalFijos;
   const costoUnitario = unidades>0 ? capitalTrabajo/unidades : 0;
