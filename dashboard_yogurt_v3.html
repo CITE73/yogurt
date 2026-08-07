@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Línea Yogurt CITEagroindustrial</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --crema:      #FFFDF8;
+  --crema2:     #F7F1E3;
+  --crema-card: #FFFFFF;
+  --violeta:    #6A3D9A;
+  --violeta-d:  #4A2A6E;
+  --violeta-lt: #9B6FC7;
+  --violeta-bg: #F3EBFA;
+  --verde:      #1B7A3D;
+  --ambar:      #C77700;
+  --rojo:       #B71C1C;
+  --txt:        #2C2416;
+  --txt-s:      #8A7D68;
+  --borde:      #E8DFC8;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'DM Sans',sans-serif; background:var(--crema2); color:var(--txt);}
+h1,h2,h3{font-family:'DM Serif Display',serif;}
+header{background:var(--violeta-d); color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;}
+header h1{font-size:1.15rem; font-weight:400; color:#FBE8FF;}
+header .sub{font-size:.75rem; color:#D9C2EE;}
+.badge{font-size:.72rem; padding:5px 12px; border-radius:20px; background:#1b7a3d33; color:#a8f0bf; font-weight:700;}
+.navbar{background:var(--violeta); padding:10px 20px;}
+.navbar a{color:#fff; text-decoration:none; font-size:.8rem; font-weight:700;}
+
+.contenedor{max-width:1100px; margin:0 auto; padding:20px;}
+
+.selector-producto{display:flex; gap:10px; margin-bottom:20px;}
+.selector-producto button{flex:1; padding:12px; border:1.5px solid var(--borde); background:var(--crema-card); border-radius:10px; font-family:'DM Sans'; font-weight:700; cursor:pointer; color:var(--txt-s);}
+.selector-producto button.active{background:var(--violeta); color:#fff; border-color:var(--violeta);}
+
+.filtros{display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;}
+.filtros select{padding:10px 14px; border:1.5px solid var(--borde); border-radius:9px; font-family:'DM Sans'; background:var(--crema-card);}
+
+.kpi-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:24px;}
+@media(max-width:800px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--crema-card); border:1px solid var(--borde); border-radius:12px; padding:14px;}
+.kpi .lbl{font-size:.66rem; color:var(--txt-s); text-transform:uppercase; font-weight:700;}
+.kpi .val{font-size:1.5rem; font-family:'DM Serif Display'; color:var(--violeta-d); margin-top:3px;}
+
+.graficos{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;}
+@media(max-width:800px){.graficos{grid-template-columns:1fr;}}
+.chart-box{background:var(--crema-card); border:1px solid var(--borde); border-radius:12px; padding:16px;}
+.chart-box h3{font-size:.9rem; margin-bottom:12px; color:var(--violeta-d);}
+.chart-box canvas{max-height:260px;}
+
+.section{background:var(--crema-card); border:1px solid var(--borde); border-radius:12px; padding:16px; margin-bottom:24px;}
+.section h3{font-size:.95rem; margin-bottom:12px; color:var(--violeta-d);}
+
+table{width:100%; border-collapse:collapse; font-size:.82rem;}
+th{text-align:left; padding:8px 6px; color:var(--txt-s); font-weight:700; border-bottom:2px solid var(--borde); font-size:.68rem; text-transform:uppercase;}
+td{padding:8px 6px; border-bottom:1px solid var(--crema2);}
+.semaforo{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px;}
+.semaforo.ok{background:var(--verde);} .semaforo.warn{background:var(--ambar);} .semaforo.bad{background:var(--rojo);}
+
+.hist-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;}
+.graficos3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
+@media(max-width:900px){.graficos3{grid-template-columns:1fr;}}
+
+.vacio{text-align:center; padding:30px; color:var(--txt-s); font-size:.9rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Dashboard — Línea Yogurt</h1>
+    <div class="sub">CITEagroindustrial Huallaga · Tingo María</div>
+  </div>
+  <span class="badge" id="badgeEstado">🟢 Conectado</span>
+</header>
+
+<div class="navbar">
+  <a href="asistente_yogurt_v2.html">← Volver a la app de planta</a>
+</div>
+
+<div class="contenedor">
+
+  <div class="selector-producto">
+    <button class="active" data-prod="" onclick="cambiarProducto('')">Ambos productos</button>
+    <button data-prod="yogurt_griego" onclick="cambiarProducto('yogurt_griego')">🥣 Yogurt Griego</button>
+    <button data-prod="yogurt_frutado" onclick="cambiarProducto('yogurt_frutado')">🫐 Yogurt Frutado</button>
+  </div>
+
+  <div class="filtros">
+    <select id="selectMes" onchange="renderMes()"></select>
+    <select id="selectAnio" onchange="renderMes()"></select>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="lbl">Lotes del mes</div><div class="val" id="kpiLotes">—</div></div>
+    <div class="kpi"><div class="lbl">Litros leche procesados</div><div class="val" id="kpiLitros">—</div></div>
+    <div class="kpi"><div class="lbl">Unidades producidas</div><div class="val" id="kpiUnidades">—</div></div>
+    <div class="kpi"><div class="lbl">Costo/und promedio</div><div class="val" id="kpiCostoUnd">—</div></div>
+    <div class="kpi"><div class="lbl">Capital de trabajo</div><div class="val" id="kpiCapital">—</div></div>
+  </div>
+
+  <div class="graficos">
+    <div class="chart-box">
+      <h3>Litros de leche por lote</h3>
+      <canvas id="chartLitros"></canvas>
+    </div>
+    <div class="chart-box">
+      <h3>Costo por unidad — curva de comportamiento</h3>
+      <canvas id="chartCostoUnd"></canvas>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Detalle de lotes del mes</h3>
+    <table id="tablaDetalle">
+      <thead><tr><th>Lote</th><th>Fecha</th><th>Producto</th><th>Pres.</th><th>Unidades</th><th>% Capacidad</th><th>Costo/und</th><th>Capital</th><th>Rend.</th></tr></thead>
+      <tbody id="tablaDetalleBody"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="hist-header">
+      <h3 style="margin:0;">Histórico anual</h3>
+      <select id="selectAnioHist" onchange="renderHistorico()"></select>
+    </div>
+    <div class="graficos3">
+      <div class="chart-box"><h3>Producción (L)</h3><canvas id="chartHistProd"></canvas></div>
+      <div class="chart-box"><h3>Costo/und</h3><canvas id="chartHistCosto"></canvas></div>
+      <div class="chart-box"><h3>Capital de trabajo</h3><canvas id="chartHistCapital"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   CONFIGURACIÓN — debe ser LA MISMA URL que en la app operario
+   ══════════════════════════════════════════════════════════ */
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxL7ouy-yQtVCZ-cK0Sq19ZyCvGwZwuqk2HxXOvLI-e-ovuqLTAA55HV4b2Ro7v4RAz/exec'; // reemplazar con URL /exec
+
+const COLOR_VIOLETA = '#6A3D9A';
+const COLOR_AMBAR   = '#C77700';
+const COLOR_ROJO    = '#B71C1C';
+const COLOR_VERDE   = '#1B7A3D';
+
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const CAPACIDAD_MAXIMA_LITROS = 80;
+
+let TODOS_LOS_DATOS = [];
+let productoFiltro = '';
+let chartLitros, chartCostoUnd, chartHistProd, chartHistCosto, chartHistCapital;
+
+/* ══════════════════════════════════════════════════════════
+   PLUGIN — etiquetas de valor sobre barras
+   ══════════════════════════════════════════════════════════ */
+function pluginEtiquetas(prefijo, esHistorico){
+  return {
+    id: 'etiquetas_'+prefijo+'_'+(esHistorico?'h':'m'),
+    afterDatasetsDraw(chart){
+      const {ctx} = chart;
+      chart.data.datasets.forEach((dataset, di)=>{
+        if(dataset.type === 'line') return;
+        const meta = chart.getDatasetMeta(di);
+        meta.data.forEach((bar, idx)=>{
+          const val = dataset.data[idx];
+          if(!esHistorico && (val===0 || val===null || val===undefined)) return;
+          ctx.save();
+          ctx.fillStyle = (val===0) ? '#999' : '#2C2416';
+          ctx.font = '600 10px DM Sans';
+          ctx.textAlign = 'center';
+          ctx.fillText(val===0?'0':(prefijo+val), bar.x, bar.y - 6);
+          ctx.restore();
+        });
+      });
+    }
+  };
+}
+
+/* ══════════════════════════════════════════════════════════
+   CARGA DE DATOS
+   ══════════════════════════════════════════════════════════ */
+async function cargarDatos(){
+  const badge = document.getElementById('badgeEstado');
+  if(APPS_SCRIPT_URL.includes('PENDIENTE')){
+    badge.textContent = '⚪ Backend no configurado';
+    badge.style.background = '#00000022';
+    badge.style.color = '#8A7D68';
+    poblarSelectores([]);
+    return;
+  }
+  try{
+    const url = `${APPS_SCRIPT_URL}?action=datos`;
+    const resp = await fetch(url);
+    const json = await resp.json();
+    if(json.status === 'ok'){
+      TODOS_LOS_DATOS = json.datos.map(d=>({
+        ...d,
+        variables: typeof d.variables === 'object' ? d.variables : (()=>{ try{return JSON.parse(d.variables_json);}catch(e){return {};} })()
+      }));
+      badge.textContent = '🟢 Conectado';
+      badge.style.background = '#1b7a3d33';
+      badge.style.color = '#a8f0bf';
+    } else {
+      throw new Error(json.mensaje || 'Error desconocido');
+    }
+  }catch(err){
+    badge.textContent = '● Error de conexión';
+    badge.style.background = '#b71c1c33';
+    badge.style.color = '#ffb3b3';
+    console.error(err);
+  }
+  poblarSelectores(TODOS_LOS_DATOS);
+  renderMes();
+  renderHistorico();
+}
+
+function parseFecha(str){
+  const [d,m,y] = (str||'01/01/2026').split('/').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function datosFiltrados(){
+  return productoFiltro ? TODOS_LOS_DATOS.filter(d=>d.producto===productoFiltro) : TODOS_LOS_DATOS;
+}
+
+function poblarSelectores(datos){
+  const hoy = new Date();
+  const selMes = document.getElementById('selectMes');
+  const selAnio = document.getElementById('selectAnio');
+  const selAnioHist = document.getElementById('selectAnioHist');
+
+  selMes.innerHTML = MESES.map((m,i)=>`<option value="${i}" ${i===hoy.getMonth()?'selected':''}>${m}</option>`).join('');
+
+  const anios = new Set(datos.map(d=>parseFecha(d.fecha_proceso).getFullYear()));
+  anios.add(hoy.getFullYear());
+  const aniosArr = Array.from(anios).sort();
+  selAnio.innerHTML = aniosArr.map(a=>`<option value="${a}" ${a===hoy.getFullYear()?'selected':''}>${a}</option>`).join('');
+  selAnioHist.innerHTML = aniosArr.map(a=>`<option value="${a}" ${a===hoy.getFullYear()?'selected':''}>${a}</option>`).join('');
+}
+
+function cambiarProducto(prod){
+  productoFiltro = prod;
+  document.querySelectorAll('.selector-producto button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.prod===prod);
+  });
+  renderMes();
+  renderHistorico();
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER: KPIs + gráficos del mes + tabla detalle
+   ══════════════════════════════════════════════════════════ */
+function fmt(n){ return 'S/ '+(isFinite(n)?n:0).toFixed(2); }
+
+function renderMes(){
+  const mes = parseInt(document.getElementById('selectMes').value);
+  const anio = parseInt(document.getElementById('selectAnio').value);
+  const datos = datosFiltrados().filter(d=>{
+    const f = parseFecha(d.fecha_proceso);
+    return f.getMonth()===mes && f.getFullYear()===anio;
+  });
+
+  const nLotes = datos.length;
+  const totalLitros = datos.reduce((s,d)=>s+(parseFloat(d.variables?.litros_leche)||0),0);
+  const totalUnidades = datos.reduce((s,d)=>s+(parseFloat(d.unidades_producidas)||0),0);
+  const costoProm = nLotes>0 ? datos.reduce((s,d)=>s+(parseFloat(d.costo_und_prod)||0),0)/nLotes : 0;
+  const totalCapital = datos.reduce((s,d)=>s+(parseFloat(d.capital_trabajo)||0),0);
+
+  document.getElementById('kpiLotes').textContent = nLotes;
+  document.getElementById('kpiLitros').textContent = totalLitros.toFixed(0)+' L';
+  document.getElementById('kpiUnidades').textContent = totalUnidades;
+  document.getElementById('kpiCostoUnd').textContent = fmt(costoProm);
+  document.getElementById('kpiCapital').textContent = fmt(totalCapital);
+
+  const labels = datos.map(d=>d.lote.replace('Lote_',''));
+  const litrosData = datos.map(d=>parseFloat(d.variables?.litros_leche)||0);
+  const costoData = datos.map(d=>Number((parseFloat(d.costo_und_prod)||0).toFixed(2)));
+
+  if(chartLitros) chartLitros.destroy();
+  chartLitros = new Chart(document.getElementById('chartLitros'), {
+    type:'bar',
+    data:{labels, datasets:[{label:'Litros', data:litrosData, backgroundColor:COLOR_VIOLETA, borderRadius:4}]},
+    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}},
+    plugins:[pluginEtiquetas('', false)]
+  });
+
+  if(chartCostoUnd) chartCostoUnd.destroy();
+  chartCostoUnd = new Chart(document.getElementById('chartCostoUnd'), {
+    type:'bar',
+    data:{labels, datasets:[
+      {label:'Costo/und', data:costoData, backgroundColor:COLOR_AMBAR, borderRadius:4},
+      {label:'Tendencia', data:costoData, type:'line', borderColor:COLOR_ROJO, backgroundColor:'transparent', tension:.3, pointRadius:3, spanGaps:false}
+    ]},
+    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}},
+    plugins:[pluginEtiquetas('S/', false)]
+  });
+
+  const tbody = document.getElementById('tablaDetalleBody');
+  if(datos.length===0){
+    tbody.innerHTML = `<tr><td colspan="9" class="vacio">Sin lotes registrados en este período.</td></tr>`;
+  } else {
+    const costoRef = costoProm;
+    tbody.innerHTML = datos.map(d=>{
+      const c = parseFloat(d.costo_und_prod)||0;
+      const pctCap = ((parseFloat(d.variables?.litros_leche)||0)/CAPACIDAD_MAXIMA_LITROS*100).toFixed(0);
+      let sem = 'ok';
+      if(c > costoRef*1.15) sem = 'bad';
+      else if(c > costoRef*1.05) sem = 'warn';
+      const nombreProd = d.producto==='yogurt_griego' ? '🥣 Griego' : '🫐 Frutado';
+      return `<tr>
+        <td>${d.lote}</td><td>${d.fecha_proceso}</td><td>${nombreProd}</td>
+        <td>${d.presentacion_g} ml</td><td>${d.unidades_producidas}</td>
+        <td>${pctCap}%</td>
+        <td><span class="semaforo ${sem}"></span>${fmt(c)}</td>
+        <td>${fmt(d.capital_trabajo)}</td>
+        <td>${sem==='ok'?'✅':sem==='warn'?'⚠️':'🔴'}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   RENDER: histórico anual
+   ══════════════════════════════════════════════════════════ */
+function renderHistorico(){
+  const anio = parseInt(document.getElementById('selectAnioHist')?.value) || new Date().getFullYear();
+  const datos = datosFiltrados().filter(d=>parseFecha(d.fecha_proceso).getFullYear()===anio);
+
+  const porMes = MESES.map((_,i)=>{
+    const delMes = datos.filter(d=>parseFecha(d.fecha_proceso).getMonth()===i);
+    return {
+      nLotes: delMes.length,
+      litros: delMes.reduce((s,d)=>s+(parseFloat(d.variables?.litros_leche)||0),0),
+      costoProm: delMes.length>0 ? delMes.reduce((s,d)=>s+(parseFloat(d.costo_und_prod)||0),0)/delMes.length : 0,
+      capital: delMes.reduce((s,d)=>s+(parseFloat(d.capital_trabajo)||0),0)
+    };
+  });
+
+  const litrosArr = porMes.map(m=>m.litros);
+  const costoCurva = porMes.map(m=>m.nLotes>0 ? Number(m.costoProm.toFixed(2)) : null);
+  const capitalArr = porMes.map(m=>Number(m.capital.toFixed(2)));
+
+  if(chartHistProd) chartHistProd.destroy();
+  chartHistProd = new Chart(document.getElementById('chartHistProd'), {
+    type:'bar',
+    data:{labels:MESES, datasets:[{label:'Litros', data:litrosArr, backgroundColor:COLOR_VIOLETA, borderRadius:4}]},
+    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}},
+    plugins:[pluginEtiquetas('', true)]
+  });
+
+  if(chartHistCosto) chartHistCosto.destroy();
+  chartHistCosto = new Chart(document.getElementById('chartHistCosto'), {
+    type:'line',
+    data:{labels:MESES, datasets:[{label:'Costo/und', data:costoCurva, borderColor:COLOR_ROJO, backgroundColor:'transparent', tension:.3, spanGaps:false, pointRadius:4}]},
+    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+  });
+
+  if(chartHistCapital) chartHistCapital.destroy();
+  chartHistCapital = new Chart(document.getElementById('chartHistCapital'), {
+    type:'bar',
+    data:{labels:MESES, datasets:[{label:'Capital', data:capitalArr, backgroundColor:COLOR_VERDE, borderRadius:4}]},
+    options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}},
+    plugins:[pluginEtiquetas('S/', true)]
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════════════ */
+cargarDatos();
+</script>
+</body>
+</html>
