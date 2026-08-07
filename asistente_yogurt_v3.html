@@ -306,9 +306,9 @@ header .sub{font-size:.72rem; color:#D9C2EE; margin-top:1px;}
   </div>
 
   <div class="section">
-    <h3><span class="num">5</span>Gastos fijos del mes <span class="badge-tipo fijo">FIJO — completo</span></h3>
+    <h3><span class="num">5</span>Gastos fijos del mes <span class="badge-tipo fijo">FIJO — prorrateado</span></h3>
     <table class="tabla-costos" id="tablaGastos"></table>
-    <div class="nota">Estos montos son fijos mensuales de la planta. No se reducen aunque proceses menos litros — por eso conviene acercarse a la capacidad máxima de 80 L/mes.</div>
+    <div class="nota">Estos montos son fijos mensuales de la planta y se prorratean según litros procesados / 80 (capacidad máxima). A menos litros, pagas una fracción menor del fijo mensual — pero como se reparte entre menos unidades, el costo por unidad sigue subiendo si produces por debajo de tu capacidad.</div>
   </div>
 
   <div class="section">
@@ -684,11 +684,10 @@ function calcularCostos(inp, c, flujo){
   const totalHorasMaquina = (c.horasMaquinaProcesoCapMax * factor) + horasCongelador + horasRefrigerador;
   const totalMOD = totalHorasHombre * c.tarifaMODhora;
 
-  // 5. Gastos FIJOS del mes — SIEMPRE el monto completo, NO se prorratean
-  const bloquesFijo = Math.max(1, inp.litrosLeche / LITROS_REFERENCIA_FRIO); // 20L = 1 bloque, mínimo 1 bloque
+  // 5. Gastos FIJOS del mes — se prorratean según litros procesados / 80 (capacidad máxima)
   const totalFijos = (c.fijoAguaPlanta + c.fijoDepreciacionMantenimiento +
-                    c.fijoMarketing + c.fijoContador + c.fijoEppMes) / bloquesFijo;
-  
+                      c.fijoMarketing + c.fijoContador + c.fijoEppMes) * factor;
+
   const totalCostosVariables = totalMP + totalEmpaque + totalServicios + totalMOD;
   const capitalTrabajo = totalCostosVariables + totalFijos;
   const costoUnitario = unidades>0 ? capitalTrabajo/unidades : 0;
@@ -759,11 +758,11 @@ function recalcularTodo(){
 
   document.getElementById('tablaGastos').innerHTML = `
     <tr><th>Concepto</th><th>Ref.</th><th>Costo</th></tr>
-    <tr><td>Agua planta</td><td>mes completo</td><td>${fmt(c.fijoAguaPlanta)}</td></tr>
-    <tr><td>Marketing</td><td>mes completo</td><td>${fmt(c.fijoMarketing)}</td></tr>
-    <tr><td>Contador</td><td>mes completo</td><td>${fmt(c.fijoContador)}</td></tr>
-    <tr><td>Depreciación y mantenimiento</td><td>mes completo</td><td>${fmt(c.fijoDepreciacionMantenimiento)}</td></tr>
-    <tr><td>EPP (${c.diasProduccionMax} días)</td><td>mes completo</td><td>${fmt(c.fijoEppMes)}</td></tr>
+    <tr><td>Agua planta</td><td>${(costos.factor*100).toFixed(0)}% del mes</td><td>${fmt(c.fijoAguaPlanta*costos.factor)}</td></tr>
+    <tr><td>Marketing</td><td>${(costos.factor*100).toFixed(0)}% del mes</td><td>${fmt(c.fijoMarketing*costos.factor)}</td></tr>
+    <tr><td>Contador</td><td>${(costos.factor*100).toFixed(0)}% del mes</td><td>${fmt(c.fijoContador*costos.factor)}</td></tr>
+    <tr><td>Depreciación y mantenimiento</td><td>${(costos.factor*100).toFixed(0)}% del mes</td><td>${fmt(c.fijoDepreciacionMantenimiento*costos.factor)}</td></tr>
+    <tr><td>EPP (${c.diasProduccionMax} días)</td><td>${(costos.factor*100).toFixed(0)}% del mes</td><td>${fmt(c.fijoEppMes*costos.factor)}</td></tr>
     <tr class="total"><td colspan="2">Subtotal gastos fijos</td><td>${fmt(costos.totalFijos)}</td></tr>`;
 
   document.getElementById('tablaResumenCostos').innerHTML = `
