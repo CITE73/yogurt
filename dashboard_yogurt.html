@@ -76,7 +76,10 @@ td{padding:8px 6px; border-bottom:1px solid var(--crema2);}
     <h1>Dashboard — Línea Yogurt</h1>
     <div class="sub">CITEagroindustrial Huallaga · Tingo María</div>
   </div>
-  <span class="badge" id="badgeEstado">🟢 Conectado</span>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <button id="btnRefrescar" onclick="cargarDatos()" style="background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); padding:7px 14px; border-radius:9px; font-family:'DM Sans'; font-weight:700; font-size:.78rem; cursor:pointer;">🔄 Actualizar</button>
+    <span class="badge" id="badgeEstado">🟢 Conectado</span>
+  </div>
 </header>
 
 <div class="navbar">
@@ -94,6 +97,7 @@ td{padding:8px 6px; border-bottom:1px solid var(--crema2);}
   <div class="filtros">
     <select id="selectMes" onchange="renderMes()"></select>
     <select id="selectAnio" onchange="renderMes()"></select>
+    <button onclick="cargarDatos()" style="background:var(--violeta-bg); color:var(--violeta-d); border:1.5px solid var(--violeta-lt); padding:9px 16px; border-radius:9px; font-family:'DM Sans'; font-weight:700; font-size:.82rem; cursor:pointer;">🔄 Recargar datos</button>
   </div>
 
   <div class="kpi-grid">
@@ -141,7 +145,7 @@ td{padding:8px 6px; border-bottom:1px solid var(--crema2);}
 /* ══════════════════════════════════════════════════════════
    CONFIGURACIÓN — debe ser LA MISMA URL que en la app operario
    ══════════════════════════════════════════════════════════ */
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxL7ouy-yQtVCZ-cK0Sq19ZyCvGwZwuqk2HxXOvLI-e-ovuqLTAA55HV4b2Ro7v4RAz/exec'; // reemplazar con URL /exec
+const APPS_SCRIPT_URL = 'PENDIENTE_DESPLEGAR'; // reemplazar con URL /exec
 
 const COLOR_VIOLETA = '#6A3D9A';
 const COLOR_AMBAR   = '#C77700';
@@ -186,6 +190,9 @@ function pluginEtiquetas(prefijo, esHistorico){
    ══════════════════════════════════════════════════════════ */
 async function cargarDatos(){
   const badge = document.getElementById('badgeEstado');
+  const btnRef = document.getElementById('btnRefrescar');
+  if(btnRef){ btnRef.textContent = '⏳ Cargando…'; btnRef.disabled = true; }
+
   if(APPS_SCRIPT_URL.includes('PENDIENTE')){
     badge.textContent = '⚪ Backend no configurado';
     badge.style.background = '#00000022';
@@ -217,11 +224,33 @@ async function cargarDatos(){
   poblarSelectores(TODOS_LOS_DATOS);
   renderMes();
   renderHistorico();
+
+  if(btnRef){ btnRef.textContent = '🔄 Actualizar'; btnRef.disabled = false; }
 }
 
-function parseFecha(str){
-  const [d,m,y] = (str||'01/01/2026').split('/').map(Number);
-  return new Date(y, m-1, d);
+function parseFecha(val){
+  // Google Sheets puede devolver la fecha como string DD/MM/YYYY,
+  // como objeto Date serializado a ISO, o vacío. Cubrimos los 3 casos.
+  if(!val) return new Date(2026,0,1);
+
+  if(val instanceof Date) return val;
+
+  const str = String(val).trim();
+
+  // Formato DD/MM/YYYY (el que genera la app operario)
+  if(str.includes('/')){
+    const partes = str.split('/').map(Number);
+    if(partes.length===3 && !partes.some(isNaN)){
+      const [d,m,y] = partes;
+      return new Date(y, m-1, d);
+    }
+  }
+
+  // Formato ISO u otro parseable nativamente (ej: "2026-08-07T00:00:00.000Z")
+  const fechaISO = new Date(str);
+  if(!isNaN(fechaISO.getTime())) return fechaISO;
+
+  return new Date(2026,0,1);
 }
 
 function datosFiltrados(){
@@ -237,7 +266,10 @@ function poblarSelectores(datos){
   selMes.innerHTML = MESES.map((m,i)=>`<option value="${i}" ${i===hoy.getMonth()?'selected':''}>${m}</option>`).join('');
 
   const anios = new Set(datos.map(d=>parseFecha(d.fecha_proceso).getFullYear()));
-  anios.add(hoy.getFullYear());
+  // Rango fijo garantizado: desde el año pasado hasta 2028, más cualquier año con datos reales
+  const ANIO_MIN = Math.min(hoy.getFullYear()-1, 2025);
+  const ANIO_MAX = Math.max(2028, hoy.getFullYear()+1);
+  for(let a=ANIO_MIN; a<=ANIO_MAX; a++) anios.add(a);
   const aniosArr = Array.from(anios).sort();
   selAnio.innerHTML = aniosArr.map(a=>`<option value="${a}" ${a===hoy.getFullYear()?'selected':''}>${a}</option>`).join('');
   selAnioHist.innerHTML = aniosArr.map(a=>`<option value="${a}" ${a===hoy.getFullYear()?'selected':''}>${a}</option>`).join('');
