@@ -671,7 +671,7 @@ function calcularCostos(inp, c, flujo){
   // Electricidad de frío: depende de DÍAS de cadena de frío, no directamente de litros.
   // Regla del negocio: 20 L se venden en 7 días → dias_frio = 7 × (litros/20)
   const diasFrio = inp.litrosLeche>0 ? DIAS_FRIO_REFERENCIA * (inp.litrosLeche/LITROS_REFERENCIA_FRIO) : 0;
-  const horasCongelador = diasFrio * c.horasCongeladorPorDia;
+  const horasCongelador = 4 * 60 * (litros/20);
   const horasRefrigerador = diasFrio * c.horasRefrigeradorPorDia;
   const kwhCongelador = horasCongelador * c.congeladorKw;
   const kwhRefrigerador = horasRefrigerador * c.refrigeradorKw;
