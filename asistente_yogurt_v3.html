@@ -398,7 +398,7 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxL7ouy-yQtVCZ-
    ══════════════════════════════════════════════════════════ */
 const CAPACIDAD_MAXIMA_LITROS = 80;
 const LITROS_REFERENCIA_FRIO = 20;
-const DIAS_FRIO_REFERENCIA = 7;
+const DIAS_FRIO_REFERENCIA = 5; // 20L de leche se refrigeran en 5 días (120h); 80L en 20 días (480h)
 
 const CONST = {
   griego: {
@@ -415,7 +415,7 @@ const CONST = {
     gLechePolvoPorLitro: 50,   // 50 g leche en polvo / L
     gCultivoPorLitro: 1,      // 20 g probiótico / L
     // Gas — VARIABLE, proporcional a litros (no cambia con días de frío)
-    gasSolesPorLitro: 32.915252/80,
+    gasSolesPorLitro: 28.800846/80,
     // Electricidad de EQUIPOS DE FRÍO — depende de horas reales de congelador+refrigerador,
     // que a su vez dependen de los días de cadena de frío (ver DIAS_FRIO_REFERENCIA)
     congeladorKw: 0.365,
